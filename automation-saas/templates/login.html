@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - SaaS Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --g0:#0b2118;--g1:#133527;--g3:#2d8a56;--g4:#4db87a;--g7:#edfaf3;
+      --ink:#0f1a13;--ink2:#374840;--ink4:#9aada5;--ink5:#c4d1cc;
+      --bg:#f2f4f1;--card:#fff;
+      --sh-xl:0 24px 64px rgba(0,0,0,.17),0 4px 16px rgba(0,0,0,.07);
+    }
+    body{
+      font-family:'Bricolage Grotesque',sans-serif;
+      background:var(--bg);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      color:var(--ink);
+    }
+    .login-box{
+      background:var(--card);
+      border-radius:24px;
+      width:100%;
+      max-width:420px;
+      padding:40px;
+      box-shadow:var(--sh-xl);
+      text-align:center;
+    }
+    .logo-mark{
+      width:48px;
+      height:48px;
+      background:var(--g0);
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      margin:0 auto 20px;
+    }
+    h1{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+    p{font-size:14px;color:var(--ink4);margin-bottom:30px}
+    .form-group{margin-bottom:20px;text-align:left}
+    label{font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;display:block}
+    input{
+      width:100%;
+      border:2px solid var(--ink5);
+      border-radius:12px;
+      padding:14px 16px;
+      font-family:inherit;
+      font-size:14px;
+      color:var(--ink);
+      background:var(--bg);
+      outline:none;
+      transition:all .15s;
+    }
+    input:focus{border-color:var(--g3);background:var(--card);box-shadow:0 0 0 4px rgba(45,138,86,.1)}
+    .btn{
+      width:100%;
+      background:var(--g0);
+      color:#fff;
+      border:none;
+      border-radius:12px;
+      padding:14px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      font-family:inherit;
+      transition:all .15s;
+      margin-top:10px;
+    }
+    .btn:hover{background:var(--g1);transform:translateY(-1px);box-shadow:0 8px 20px rgba(11,33,24,.2)}
+    .error-msg {
+      color: #e5483a;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 20px;
+      background: rgba(229,72,58,.08);
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <div class="logo-mark">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+  </div>
+  <h1>Welcome Back</h1>
+  <p>Enter your admin credentials to access the engine.</p>
+  
+  {% if error %}
+  <div class="error-msg">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/login">
+    <div class="form-group">
+      <label>Admin Password</label>
+      <input type="password" name="password" placeholder="••••••••" required autofocus>
+    </div>
+    <button type="submit" class="btn">Access Dashboard</button>
+  </form>
+</div>
+
+</body>
+</html>

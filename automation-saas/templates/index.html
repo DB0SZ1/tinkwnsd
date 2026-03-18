@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SaaS Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="logo-name">Donezo SaaS</div>
+    </div>
+    
+    <div class="nav-label">Menu</div>
+    <a href="/" class="nav-item active" data-nav="dash">
+      <svg class="nav-icon-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="#" class="nav-item" data-nav="top">
+      <svg class="nav-icon-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Topics <span class="nav-badge">{{ topics|length }}</span>
+    </a>
+    <a href="#" class="nav-item" data-nav="img">
+      <svg class="nav-icon-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Image Library
+    </a>
+    
+    <div class="sidebar-spacer"></div>
+
+    <div class="sidebar-promo">
+      <div class="promo-icon-w"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="promo-title">Settings</div>
+      <div class="promo-sub">Manage API Keys & Config</div>
+      <button class="promo-btn" data-open="modal-settings">Open Settings</button>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <main class="main">
+    
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aada5" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search topics, posts, or images...">
+        <div class="kbd">⌘K</div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" data-open="modal-create">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <div class="divider-v"></div>
+        <div class="user-chip">
+          <div class="avatar">A</div>
+          <div>
+            <div class="u-name">Admin</div>
+            <div class="u-email">admin@saas.com</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+      
+      <!-- HEADER -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Creator Dashboard</h1>
+          <div class="page-sub">Manage your AI social media marketing engine.</div>
+        </div>
+        <div class="header-btns">
+          <button class="btn btn-outline" data-open="modal-create">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Topic
+          </button>
+          <button class="btn btn-primary" data-open="modal-image">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Add Image
+          </button>
+        </div>
+      </div>
+
+      <!-- PLATFORM CARDS -->
+      <div class="platform-row">
+        <div class="platform-card linkedin">
+          <div class="plat-icon li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div>
+          <div class="plat-info">
+            <div class="plat-name">LinkedIn Marketing</div>
+            <div class="plat-mode"><div class="plat-mode-dot on"></div> Publishing Active</div>
+            <div class="plat-tone-badge pro">Professional Tone</div>
+          </div>
+          <div class="plat-stats">
+            <div class="plat-stat-num">{{ stats.li_queue }}</div>
+            <div class="plat-stat-lbl">In Queue</div>
+          </div>
+        </div>
+        
+        <div class="platform-card x-tw">
+          <div class="plat-icon xt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></div>
+          <div class="plat-info">
+            <div class="plat-name">X (Twitter) Hype</div>
+            <div class="plat-mode"><div class="plat-mode-dot on"></div> Publishing Active</div>
+            <div class="plat-tone-badge fun">Punchy Tone</div>
+          </div>
+          <div class="plat-stats">
+            <div class="plat-stat-num">{{ stats.x_queue }}</div>
+            <div class="plat-stat-lbl">In Queue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOCIAL GRID (CREATE & PANELS) -->
+      <div class="social-grid">
+        
+        <!-- LEFT: CREATE TOPIC -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Feed the Engine</div>
+            <button class="btn btn-sm btn-outline" id="btn-submit-topic">Save Topic</button>
+          </div>
+          
+          <textarea id="topicInput" class="topic-input" rows="4" placeholder="What should we talk about? (e.g. 'Why micro-SaaS is better than VC funding')"></textarea>
+          
+          <!-- CONTROLS -->
+          <div class="cf-row">
+            <div class="cf-group">
+              <label>Content Flavor</label>
+              <select class="cf-select" id="flavorSelect">
+                <option value="random">🎲 Auto-Randomize</option>
+                <option value="storytime">📖 Story Time</option>
+                <option value="hottake">🔥 Hot Take</option>
+                <option value="foodthought">🍽️ Food for Thought</option>
+                <option value="ragebait">😤 Ragebait</option>
+                <option value="update">📰 Quick Update</option>
+                <option value="tips">💡 Tactical Tips</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PLATFORM DISTRIBUTION -->
+          <label class="slabel" style="margin-top:10px">Distribute To</label>
+          <div class="plat-toggle-row">
+            <div class="plat-toggle on li" id="tog-li"><div class="plat-toggle-dot"></div> LinkedIn</div>
+            <div class="plat-toggle on xt" id="tog-xt"><div class="plat-toggle-dot"></div> X (Twitter)</div>
+          </div>
+          
+          <label class="slabel">Upcoming Queue</label>
+          <div>
+            {% for po in recent_posts %}
+            <div class="queue-item">
+              <div class="q-plat {{ 'li' if po.platform == 'linkedin' else 'xt' }}">
+                 {% if po.platform == 'linkedin' %}in{% else %}𝕏{% endif %}
+              </div>
+              <div class="q-info">
+                <div class="q-text">{{ po.content[:60] }}...</div>
+                <div class="q-meta">{{ po.status }} • {{ po.published_at }}</div>
+              </div>
+              <div class="q-badge {{ 'soon' if po.status == 'pending' else 'later' }}">{{ po.status }}</div>
+            </div>
+            {% else %}
+            <div style="font-size: 12px; color: var(--ink4)">No tasks in queue.</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+          
+          <!-- PERSONALITY SELECTOR -->
+          <div class="personality-banner">
+            <div class="pb-head">
+              <div class="pb-icon">🧠</div>
+              <div>
+                <div class="pb-title">Bot Personality</div>
+                <div class="pb-sub">Select the AI's current mood state</div>
+              </div>
+            </div>
+            
+            <input type="hidden" id="hdn-personality" value="random">
+            <div class="mode-row">
+              <div class="mode-item active" data-mode="random" data-mode-value="random">
+                <div class="mode-emoji">🎲</div>
+                <div class="mode-name">Auto-Pilot</div>
+                <div class="mode-desc">Let AI decide</div>
+              </div>
+              <div class="mode-item" data-mode="prof" data-mode-value="professional">
+                <div class="mode-emoji">💼</div>
+                <div class="mode-name">Professional</div>
+                <div class="mode-desc">Clean, structured inputs</div>
+              </div>
+              <div class="mode-item" data-mode="chaos" data-mode-value="chaotic">
+                <div class="mode-emoji">🌪️</div>
+                <div class="mode-name">Chaotic</div>
+                <div class="mode-desc">Provocative hooks</div>
+              </div>
+              <div class="mode-item" data-mode="chill" data-mode-value="chill">
+                <div class="mode-emoji">🛋️</div>
+                <div class="mode-name">Chill</div>
+                <div class="mode-desc">Imperfect, friendly</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MINI STATS -->
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <div class="ms-num">{{ stats.total_topics }}</div>
+              <div class="ms-lbl">Active Topics</div>
+            </div>
+            <div class="mini-stat">
+              <div class="ms-num">{{ stats.total_images }}</div>
+              <div class="ms-lbl">Saved Images</div>
+            </div>
+            <div class="mini-stat">
+              <div class="ms-num">{{ stats.leads }}</div>
+              <div class="ms-lbl">Engaged Leads</div>
+            </div>
+            <div class="mini-stat">
+              <div class="ms-num">₹/€/$</div>
+              <div class="ms-lbl">0.00 Spent</div>
+            </div>
+          </div>
+
+          <!-- RECENT IMAGES -->
+          <div class="card" style="flex:1">
+            <div class="card-head">
+              <div class="card-title">Image Arsenal</div>
+              <button class="btn btn-sm btn-outline" data-open="modal-image">Add</button>
+            </div>
+            <div class="img-lib-grid">
+              {% for img in images[:5] %}
+              <div class="lib-img">
+                <img src="/static/uploads/{{ img.filename }}" style="width:100%; height:100%; object-fit:cover; border-radius: 6px;">
+                <div class="lib-tag-label">{{ img.tag }}</div>
+                <div class="sel-chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              {% endfor %}
+              <div class="lib-img lib-img-add" data-open="modal-image">+</div>
+            </div>
+            <div class="lib-hint">Images are automatically paired based on flavor and platform.</div>
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </main>
+</div>
+
+<!-- ============================================== -->
+<!-- MODALS -->
+<!-- ============================================== -->
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">System Settings</div>
+      <button class="modal-x" data-close="modal-settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-bd" style="max-height: 65vh; overflow-y: auto; padding-right: 15px;">
+      <div style="font-weight:600; font-size:12px; margin-bottom:10px; color:var(--ink4);">── OpenRouter (AI content generation) ──</div>
+      <div class="form-g">
+        <label class="form-lbl">OpenRouter API Key</label>
+        <input type="password" class="form-inp" id="set-or-key" placeholder="Leave blank to keep existing">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">OpenRouter Model</label>
+        <input type="text" class="form-inp" id="set-or-model" placeholder="mistralai/mistral-7b-instruct">
+      </div>
+
+      <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── X / Twitter (API) ──</div>
+      <div class="form-g">
+        <label class="form-lbl">X API Key</label>
+        <input type="password" class="form-inp" id="set-x-key" placeholder="Leave blank to keep existing">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">X API Secret</label>
+        <input type="password" class="form-inp" id="set-x-secret" placeholder="Leave blank to keep existing">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">X Access Token</label>
+        <input type="password" class="form-inp" id="set-x-token" placeholder="Leave blank to keep existing">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">X Access Token Secret</label>
+        <input type="password" class="form-inp" id="set-x-token-secret" placeholder="Leave blank to keep existing">
+      </div>
+
+      <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── X / Twitter (twikit scraping) ──</div>
+      <div class="form-g">
+        <label class="form-lbl">X Username</label>
+        <input type="text" class="form-inp" id="set-x-user" placeholder="Your @handle">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">X Email</label>
+        <input type="email" class="form-inp" id="set-x-email" placeholder="Your account email">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">X Password</label>
+        <input type="password" class="form-inp" id="set-x-pass" placeholder="Leave blank to keep existing">
+      </div>
+
+      <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── LinkedIn ──</div>
+      <div class="form-g">
+        <label class="form-lbl">LinkedIn Access Token</label>
+        <input type="password" class="form-inp" id="set-li-token" placeholder="Leave blank to keep existing">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">LinkedIn Person ID (URN)</label>
+        <input type="text" class="form-inp" id="set-li-urn" placeholder="urn:li:person:XXXXXX">
+      </div>
+
+      <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── System ──</div>
+      <div class="form-g">
+        <label class="form-lbl">Database URL</label>
+        <input type="text" class="form-inp" id="set-db" placeholder="sqlite:///./automation.db">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Admin API Key (Password)</label>
+        <input type="password" class="form-inp" id="set-admin-key" placeholder="Leave blank to keep existing">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Timezone</label>
+        <input type="text" class="form-inp" id="set-tz" placeholder="Africa/Lagos">
+      </div>
+
+      <div class="modal-ft">
+        <button class="btn btn-outline" data-close="modal-settings">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-settings">Save Env</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD IMAGE MODAL -->
+<div class="modal-overlay" id="modal-image">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">Upload Image to Library</div>
+      <button class="modal-x" data-close="modal-image"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <input type="file" id="file-input" style="display:none" accept="image/png, image/jpeg, image/gif">
+      <div class="upzone" id="upload-zone">
+        <div class="up-icon-w"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <div class="up-title" id="upload-title">Drop an image here</div>
+        <div class="up-sub">Supported: JPG, PNG, GIF (Max 5MB)</div>
+      </div>
+      
+      <div class="form-g">
+        <label class="form-lbl">Categorize Image (For AI Matching)</label>
+        <select class="form-inp" id="img-tag-select" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239aada5%22 stroke-width=%222.5%22%3E%3Cpolyline points=%226 9 12 15 18 9%22/%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 12px center;">
+          <option value="meme">Meme / Funny</option>
+          <option value="headshot">Professional Headshot</option>
+          <option value="infographic">Data & Infographic</option>
+          <option value="personal">Personal / Casual</option>
+          <option value="quote">Quote Graphic</option>
+        </select>
+      </div>
+
+      <div class="modal-ft">
+        <button class="btn btn-outline" data-close="modal-image">Cancel</button>
+        <button class="btn btn-primary" id="btn-upload">Upload Asset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

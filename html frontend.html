@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donezo — Social Bot</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --g0: #0b2118;
+            --g1: #133527;
+            --g2: #1e5c3a;
+            --g3: #2d8a56;
+            --g4: #4db87a;
+            --g5: #85e0a3;
+            --g6: #c8f5d8;
+            --g7: #edfaf3;
+            --ink: #0f1a13;
+            --ink2: #374840;
+            --ink3: #637068;
+            --ink4: #9aada5;
+            --ink5: #c4d1cc;
+            --bg: #f2f4f1;
+            --card: #fff;
+            --amber: #e8a020;
+            --red: #e5483a;
+            --r: 14px;
+            --r-sm: 9px;
+            --sh: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 8px rgba(0, 0, 0, .05);
+            --sh-lg: 0 8px 32px rgba(0, 0, 0, .11), 0 2px 8px rgba(0, 0, 0, .05);
+            --sh-xl: 0 24px 64px rgba(0, 0, 0, .17), 0 4px 16px rgba(0, 0, 0, .07);
+            --font: 'Bricolage Grotesque', sans-serif;
+            --mono: 'DM Mono', monospace;
+            --sw: 224px;
+        }
+
+        html {
+            font-size: 14px
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--ink)
+        }
+
+        .shell {
+            background: var(--bg);
+            border-radius: 22px;
+            width: 1200px;
+            max-width: 100%;
+            min-height: 860px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, .13), 0 4px 16px rgba(0, 0, 0, .06)
+        }
+
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .38);
+            z-index: 199;
+            display: none
+        }
+
+        .backdrop.open {
+            display: block
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sw);
+            background: var(--card);
+            display: flex;
+            flex-direction: column;
+            padding: 22px 14px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--ink5);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            z-index: 200
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 2px 8px 22px
+        }
+
+        .logo-mark {
+            width: 34px;
+            height: 34px;
+            background: var(--g0);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0
+        }
+
+        .logo-name {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -.4px
+        }
+
+        .nav-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--ink4);
+            padding: 10px 10px 5px
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 11px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--ink3);
+            transition: background .15s, color .15s;
+            user-select: none
+        }
+
+        .nav-item:hover {
+            background: var(--g7);
+            color: var(--g1)
+        }
+
+        .nav-item.active {
+            background: var(--g0);
+            color: #fff;
+            font-weight: 600
+        }
+
+        .nav-icon-w {
+            width: 17px;
+            height: 17px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            color: var(--ink4);
+            transition: color .15s
+        }
+
+        .nav-item.active .nav-icon-w {
+            color: rgba(255, 255, 255, .85)
+        }
+
+        .nav-item:not(.active):hover .nav-icon-w {
+            color: var(--g2)
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--g4);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 20px
+        }
+
+        .nav-item.active .nav-badge {
+            background: rgba(255, 255, 255, .22)
+        }
+
+        .sidebar-spacer {
+            flex: 1
+        }
+
+        .sidebar-promo {
+            background: var(--g0);
+            border-radius: var(--r);
+            padding: 18px 16px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px
+        }
+
+        .sidebar-promo::before {
+            content: '';
+            position: absolute;
+            top: -28px;
+            right: -28px;
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, .04);
+            border-radius: 50%
+        }
+
+        .promo-icon-w {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, .12);
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 10px
+        }
+
+        .promo-title {
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 3px
+        }
+
+        .promo-sub {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .5);
+            margin-bottom: 14px
+        }
+
+        .promo-btn {
+            background: var(--g4);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-family: var(--font);
+            transition: background .15s
+        }
+
+        .promo-btn:hover {
+            background: var(--g3)
+        }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden
+        }
+
+        /* TOPBAR */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 15px 22px;
+            background: var(--card);
+            border-bottom: 1px solid var(--ink5);
+            flex-shrink: 0
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--ink5);
+            background: var(--card);
+            flex-shrink: 0
+        }
+
+        .hamburger span {
+            display: block;
+            width: 16px;
+            height: 2px;
+            background: var(--ink3);
+            border-radius: 2px
+        }
+
+        .search-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            background: var(--bg);
+            border: 1px solid var(--ink5);
+            border-radius: var(--r-sm);
+            padding: 8px 13px;
+            transition: border-color .15s, box-shadow .15s;
+            min-width: 0
+        }
+
+        .search-box:focus-within {
+            border-color: var(--g3);
+            box-shadow: 0 0 0 3px rgba(45, 138, 86, .1)
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            font-family: var(--font);
+            font-size: 13px;
+            color: var(--ink);
+            outline: none;
+            flex: 1;
+            min-width: 0
+        }
+
+        .search-box input::placeholder {
+            color: var(--ink4)
+        }
+
+        .kbd {
+            font-size: 10px;
+            color: var(--ink4);
+            background: var(--card);
+            padding: 2px 6px;
+            border-radius: 5px;
+            font-family: var(--mono);
+            border: 1px solid var(--ink5);
+            white-space: nowrap;
+            flex-shrink: 0
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--ink5);
+            background: var(--card);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--ink3);
+            transition: background .15s, color .15s;
+            position: relative;
+            flex-shrink: 0
+        }
+
+        .icon-btn:hover {
+            background: var(--g7);
+            color: var(--g1)
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 6px;
+            height: 6px;
+            background: var(--red);
+            border-radius: 50%;
+            border: 1.5px solid #fff
+        }
+
+        .divider-v {
+            width: 1px;
+            height: 28px;
+            background: var(--ink5);
+            margin: 0 2px;
+            flex-shrink: 0
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            padding: 4px 10px 4px 4px;
+            border-radius: 24px;
+            border: 1px solid var(--ink5);
+            background: var(--card);
+            transition: background .15s;
+            flex-shrink: 0
+        }
+
+        .user-chip:hover {
+            background: var(--g7)
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0
+        }
+
+        .u-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1
+        }
+
+        .u-email {
+            font-size: 10px;
+            color: var(--ink4);
+            margin-top: 1px
+        }
+
+        /* CONTENT */
+        .content {
+            flex: 1;
+            padding: 22px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-width: 0
+        }
+
+        .content::-webkit-scrollbar {
+            width: 4px
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: var(--ink5);
+            border-radius: 4px
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -.5px;
+            line-height: 1
+        }
+
+        .page-sub {
+            font-size: 12.5px;
+            color: var(--ink4);
+            margin-top: 4px
+        }
+
+        .header-btns {
+            display: flex;
+            gap: 9px;
+            flex-shrink: 0;
+            flex-wrap: wrap
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: var(--r-sm);
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: all .15s;
+            border: none;
+            white-space: nowrap
+        }
+
+        .btn-primary {
+            background: var(--g0);
+            color: #fff
+        }
+
+        .btn-primary:hover {
+            background: var(--g1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(11, 33, 24, .22)
+        }
+
+        .btn-outline {
+            background: var(--card);
+            color: var(--ink2);
+            border: 1px solid var(--ink5)
+        }
+
+        .btn-outline:hover {
+            background: var(--g7);
+            border-color: var(--g4);
+            color: var(--g1)
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px
+        }
+
+        .btn-danger {
+            background: rgba(229, 72, 58, .08);
+            color: var(--red);
+            border: 1px solid rgba(229, 72, 58, .2)
+        }
+
+        .btn-danger:hover {
+            background: rgba(229, 72, 58, .15)
+        }
+
+        /* PLATFORM CARDS */
+        .platform-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 13px
+        }
+
+        .platform-card {
+            background: var(--card);
+            border-radius: var(--r);
+            padding: 16px 18px;
+            box-shadow: var(--sh);
+            border: 1px solid rgba(0, 0, 0, .04);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: transform .15s, box-shadow .15s;
+            min-width: 0
+        }
+
+        .platform-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--sh-lg)
+        }
+
+        .platform-card.linkedin {
+            border-left: 3px solid #0a66c2
+        }
+
+        .platform-card.x-tw {
+            border-left: 3px solid #000
+        }
+
+        .plat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            font-size: 18px
+        }
+
+        .plat-icon.li {
+            background: #e8f0fe
+        }
+
+        .plat-icon.xt {
+            background: #f0f0f0
+        }
+
+        .plat-info {
+            min-width: 0;
+            flex: 1
+        }
+
+        .plat-name {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--ink)
+        }
+
+        .plat-mode {
+            font-size: 11px;
+            color: var(--ink4);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px
+        }
+
+        .plat-mode-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .plat-mode-dot.on {
+            background: var(--g3)
+        }
+
+        .plat-tone-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            margin-top: 6px;
+            display: inline-block
+        }
+
+        .plat-tone-badge.pro {
+            background: rgba(10, 102, 194, .1);
+            color: #0a66c2
+        }
+
+        .plat-tone-badge.fun {
+            background: rgba(0, 0, 0, .06);
+            color: #333
+        }
+
+        .plat-stats {
+            margin-left: auto;
+            text-align: right;
+            flex-shrink: 0
+        }
+
+        .plat-stat-num {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -.5px
+        }
+
+        .plat-stat-lbl {
+            font-size: 10px;
+            color: var(--ink4);
+            font-weight: 600
+        }
+
+        /* SOCIAL GRID */
+        .social-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 13px;
+            min-width: 0
+        }
+
+        /* CARD */
+        .card {
+            background: var(--card);
+            border-radius: var(--r);
+            padding: 18px;
+            box-shadow: var(--sh);
+            border: 1px solid rgba(0, 0, 0, .04);
+            min-width: 0
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -.2px
+        }
+
+        /* INPUTS */
+        .topic-input {
+            width: 100%;
+            border: 1.5px solid var(--ink5);
+            border-radius: var(--r-sm);
+            padding: 12px 14px;
+            font-family: var(--font);
+            font-size: 14px;
+            color: var(--ink);
+            background: var(--bg);
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            resize: none;
+            display: block;
+            margin-bottom: 14px
+        }
+
+        .topic-input:focus {
+            border-color: var(--g3);
+            box-shadow: 0 0 0 3px rgba(45, 138, 86, .1);
+            background: var(--card)
+        }
+
+        .topic-input::placeholder {
+            color: var(--ink4)
+        }
+
+        .cf-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px
+        }
+
+        .cf-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--ink2);
+            margin-bottom: 6px;
+            display: block;
+            letter-spacing: .03em;
+            text-transform: uppercase
+        }
+
+        .cf-select {
+            width: 100%;
+            border: 1.5px solid var(--ink5);
+            border-radius: var(--r-sm);
+            padding: 9px 32px 9px 12px;
+            font-family: var(--font);
+            font-size: 13px;
+            color: var(--ink);
+            background: var(--bg);
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aada5' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            cursor: pointer;
+            transition: border-color .15s
+        }
+
+        .cf-select:focus {
+            border-color: var(--g3);
+            box-shadow: 0 0 0 3px rgba(45, 138, 86, .1)
+        }
+
+        .sch-input {
+            width: 100%;
+            border: 1.5px solid var(--ink5);
+            border-radius: var(--r-sm);
+            padding: 8px 11px;
+            font-family: var(--font);
+            font-size: 12.5px;
+            color: var(--ink);
+            background: var(--bg);
+            outline: none;
+            transition: border-color .15s
+        }
+
+        .sch-input:focus {
+            border-color: var(--g3)
+        }
+
+        /* SECTION LABEL */
+        .slabel {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--ink4);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 8px;
+            display: block
+        }
+
+        /* FLAVOR PILLS */
+        .flavor-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 14px
+        }
+
+        .f-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid var(--ink5);
+            background: var(--bg);
+            color: var(--ink3);
+            transition: all .15s;
+            user-select: none
+        }
+
+        .f-pill:hover {
+            border-color: var(--g4);
+            color: var(--g2);
+            background: var(--g7)
+        }
+
+        .f-pill.active {
+            border-color: var(--g3);
+            background: var(--g0);
+            color: #fff
+        }
+
+        /* TOGGLES */
+        .plat-toggle-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap
+        }
+
+        .plat-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 13px;
+            border-radius: var(--r-sm);
+            border: 1.5px solid var(--ink5);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink3);
+            transition: all .15s;
+            user-select: none
+        }
+
+        .plat-toggle.on.li {
+            border-color: #0a66c2;
+            background: #e8f0fe;
+            color: #0a66c2
+        }
+
+        .plat-toggle.on.xt {
+            border-color: #000;
+            background: #f0f0f0;
+            color: #000
+        }
+
+        .plat-toggle-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--ink4);
+            flex-shrink: 0
+        }
+
+        .plat-toggle.on.li .plat-toggle-dot {
+            background: #0a66c2
+        }
+
+        .plat-toggle.on.xt .plat-toggle-dot {
+            background: #000
+        }
+
+        /* POST TABS */
+        .post-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap
+        }
+
+        .post-tab {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid var(--ink5);
+            color: var(--ink3);
+            transition: all .15s
+        }
+
+        .post-tab.active {
+            background: var(--g0);
+            color: #fff;
+            border-color: transparent
+        }
+
+        .post-tab:hover:not(.active) {
+            background: var(--g7);
+            color: var(--g2);
+            border-color: var(--g5)
+        }
+
+        /* POST PREVIEW */
+        .post-preview {
+            border: 1.5px solid var(--ink5);
+            border-radius: var(--r);
+            overflow: hidden
+        }
+
+        .post-preview-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--ink5);
+            background: var(--bg);
+            flex-wrap: wrap
+        }
+
+        .pp-plat-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            flex-shrink: 0
+        }
+
+        .pp-plat-name {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--ink)
+        }
+
+        .pp-tone {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: auto
+        }
+
+        .pp-tone.pro {
+            background: rgba(10, 102, 194, .1);
+            color: #0a66c2
+        }
+
+        .pp-tone.fun {
+            background: rgba(0, 0, 0, .07);
+            color: #333
+        }
+
+        .pp-flavor-tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(45, 138, 86, .1);
+            color: var(--g2)
+        }
+
+        .post-body {
+            padding: 14px
+        }
+
+        .post-text {
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--ink2);
+            word-break: break-word
+        }
+
+        .post-text .hl {
+            color: var(--g2);
+            font-weight: 700
+        }
+
+        .post-img-strip {
+            display: flex;
+            gap: 7px;
+            padding: 0 14px 12px;
+            background: var(--bg);
+            flex-wrap: wrap
+        }
+
+        .img-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            border: 1.5px solid var(--ink5);
+            display: grid;
+            place-items: center;
+            font-size: 18px
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 7px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--ink5);
+            background: var(--bg);
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        /* SCHEDULE ROW */
+        .schedule-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 9px;
+            margin-top: 14px;
+            align-items: end
+        }
+
+        .sch-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--ink2);
+            margin-bottom: 5px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: .03em
+        }
+
+        /* GENERATING */
+        .generating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--g3);
+            font-weight: 600
+        }
+
+        .gen-dots span {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--g4);
+            animation: bounce 1.2s ease-in-out infinite
+        }
+
+        .gen-dots span:nth-child(2) {
+            animation-delay: .2s
+        }
+
+        .gen-dots span:nth-child(3) {
+            animation-delay: .4s
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(.6);
+                opacity: .5
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        /* TOPIC TAG */
+        .topic-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--g7);
+            border: 1px solid var(--g5);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--g1);
+            margin-right: 6px;
+            margin-bottom: 6px
+        }
+
+        .topic-tag .rm {
+            cursor: pointer;
+            color: var(--ink4);
+            font-size: 14px;
+            line-height: 1;
+            transition: color .15s
+        }
+
+        .topic-tag .rm:hover {
+            color: var(--red)
+        }
+
+        /* RIGHT PANEL */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            min-width: 0
+        }
+
+        /* PERSONALITY */
+        .personality-banner {
+            background: var(--g0);
+            border-radius: var(--r);
+            padding: 16px;
+            color: #fff;
+            position: relative;
+            overflow: hidden
+        }
+
+        .personality-banner::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, .04);
+            border-radius: 50%
+        }
+
+        .pb-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px
+        }
+
+        .pb-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, .12);
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            font-size: 15px;
+            flex-shrink: 0
+        }
+
+        .pb-title {
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: -.2px
+        }
+
+        .pb-sub {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .55);
+            margin-top: 2px
+        }
+
+        .mode-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px
+        }
+
+        .mode-item {
+            border: 1.5px solid rgba(255, 255, 255, .15);
+            border-radius: 9px;
+            padding: 10px 11px;
+            cursor: pointer;
+            transition: all .15s
+        }
+
+        .mode-item:hover {
+            border-color: rgba(255, 255, 255, .35);
+            background: rgba(255, 255, 255, .05)
+        }
+
+        .mode-item.active {
+            border-color: var(--g4);
+            background: rgba(77, 184, 122, .15)
+        }
+
+        .mode-emoji {
+            font-size: 18px;
+            margin-bottom: 4px
+        }
+
+        .mode-name {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: #fff
+        }
+
+        .mode-desc {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .5);
+            margin-top: 1px;
+            line-height: 1.3
+        }
+
+        /* IMAGE LIBRARY */
+        .img-lib-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px
+        }
+
+        .lib-img {
+            aspect-ratio: 1;
+            border-radius: 9px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: border-color .15s, transform .15s;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .lib-img:hover {
+            border-color: var(--g4);
+            transform: scale(1.03)
+        }
+
+        .lib-img.selected {
+            border-color: var(--g3);
+            box-shadow: 0 0 0 3px rgba(45, 138, 86, .15)
+        }
+
+        .lib-img .sel-chk {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: var(--g3);
+            border-radius: 50%;
+            display: none;
+            place-items: center;
+            color: #fff
+        }
+
+        .lib-img.selected .sel-chk {
+            display: grid
+        }
+
+        .lib-img-add {
+            border-style: dashed !important;
+            border-color: var(--ink5) !important;
+            border-width: 2px !important;
+            color: var(--ink4);
+            font-size: 24px;
+            font-weight: 300
+        }
+
+        .lib-img-add:hover {
+            border-color: var(--g3) !important;
+            color: var(--g3)
+        }
+
+        .lib-tag-label {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, .5);
+            color: #fff;
+            text-transform: uppercase
+        }
+
+        .lib-hint {
+            font-size: 11px;
+            color: var(--ink4);
+            margin-top: 10px;
+            line-height: 1.5
+        }
+
+        /* QUEUE */
+        .queue-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--bg)
+        }
+
+        .queue-item:last-child {
+            border-bottom: none
+        }
+
+        .q-plat {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            flex-shrink: 0
+        }
+
+        .q-plat.li {
+            background: #e8f0fe
+        }
+
+        .q-plat.xt {
+            background: #f0f0f0
+        }
+
+        .q-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .q-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .q-meta {
+            font-size: 10px;
+            color: var(--ink4);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px
+        }
+
+        .q-flavor {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: rgba(45, 138, 86, .1);
+            color: var(--g2)
+        }
+
+        .q-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 8px;
+            flex-shrink: 0
+        }
+
+        .q-badge.soon {
+            background: rgba(232, 160, 32, .12);
+            color: var(--amber)
+        }
+
+        .q-badge.later {
+            background: var(--bg);
+            color: var(--ink4);
+            border: 1px solid var(--ink5)
+        }
+
+        /* MINI STATS */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px
+        }
+
+        .mini-stat {
+            background: var(--card);
+            border-radius: var(--r-sm);
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, .04);
+            box-shadow: var(--sh)
+        }
+
+        .ms-num {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -.5px
+        }
+
+        .ms-lbl {
+            font-size: 10px;
+            color: var(--ink4);
+            font-weight: 600;
+            margin-top: 2px
+        }
+
+        .ms-change {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--g3);
+            margin-top: 5px
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 33, 24, .52);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity .25s
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1
+        }
+
+        .modal {
+            background: var(--card);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--sh-xl);
+            transform: translateY(20px) scale(.97);
+            transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), opacity .25s;
+            opacity: 0;
+            overflow: hidden
+        }
+
+        .modal-overlay.open .modal {
+            transform: none;
+            opacity: 1
+        }
+
+        .modal-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 24px 0
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -.3px
+        }
+
+        .modal-x {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--ink3);
+            transition: background .15s, color .15s
+        }
+
+        .modal-x:hover {
+            background: var(--g7);
+            color: var(--g1)
+        }
+
+        .modal-bd {
+            padding: 20px 24px 24px
+        }
+
+        .form-g {
+            margin-bottom: 16px
+        }
+
+        .form-lbl {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink2);
+            margin-bottom: 6px;
+            display: block;
+            letter-spacing: .02em
+        }
+
+        .form-inp {
+            width: 100%;
+            border: 1.5px solid var(--ink5);
+            border-radius: var(--r-sm);
+            padding: 10px 13px;
+            font-family: var(--font);
+            font-size: 13px;
+            color: var(--ink);
+            background: var(--bg);
+            outline: none;
+            transition: border-color .15s;
+            appearance: none
+        }
+
+        .form-inp:focus {
+            border-color: var(--g3);
+            box-shadow: 0 0 0 3px rgba(45, 138, 86, .1)
+        }
+
+        .modal-ft {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            padding-top: 4px;
+            flex-wrap: wrap
+        }
+
+        .upzone {
+            border: 2px dashed var(--ink5);
+            border-radius: var(--r);
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            margin-bottom: 12px
+        }
+
+        .upzone:hover {
+            border-color: var(--g3);
+            background: var(--g7)
+        }
+
+        .up-icon-w {
+            width: 42px;
+            height: 42px;
+            background: var(--g7);
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 10px;
+            color: var(--g2)
+        }
+
+        .up-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 3px
+        }
+
+        .up-sub {
+            font-size: 11.5px;
+            color: var(--ink4)
+        }
+
+        .prev-modal {
+            max-width: 560px
+        }
+
+        .prev-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap
+        }
+
+        .prev-tab {
+            padding: 7px 14px;
+            border-radius: var(--r-sm);
+            border: 1.5px solid var(--ink5);
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .prev-tab.active {
+            background: var(--g0);
+            color: #fff;
+            border-color: transparent
+        }
+
+        .prev-tab:hover:not(.active) {
+            background: var(--g7);
+            border-color: var(--g4);
+            color: var(--g2)
+        }
+
+        .bot-note {
+            background: rgba(45, 138, 86, .06);
+            border: 1px solid var(--g6);
+            border-radius: var(--r-sm);
+            padding: 11px 13px;
+            font-size: 12px;
+            color: var(--g1);
+            margin-bottom: 16px
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .platform-card {
+            animation: fadeUp .4s ease both
+        }
+
+        .platform-card:nth-child(1) {
+            animation-delay: .05s
+        }
+
+        .platform-card:nth-child(2) {
+            animation-delay: .1s
+        }
+
+        .social-grid {
+            animation: fadeUp .4s ease .2s both
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media(max-width:1024px) {
+            .social-grid {
+                grid-template-columns: 1fr
+            }
+
+            .right-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 13px
+            }
+
+            .personality-banner {
+                grid-column: span 2
+            }
+        }
+
+        @media(max-width:768px) {
+            body {
+                padding: 0
+            }
+
+            .shell {
+                border-radius: 16px;
+                min-height: auto
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                border-radius: 0 16px 16px 0;
+                box-shadow: var(--sh-xl);
+                overflow-y: auto
+            }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+
+            .hamburger {
+                display: flex
+            }
+
+            .main {
+                width: 100%
+            }
+
+            .topbar {
+                padding: 12px 16px;
+                gap: 10px
+            }
+
+            .content {
+                padding: 14px;
+                gap: 14px
+            }
+
+            .u-email,
+            .u-name {
+                display: none
+            }
+
+            .user-chip {
+                padding: 4px
+            }
+
+            .divider-v {
+                display: none
+            }
+
+            .kbd {
+                display: none
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 10px
+            }
+
+            .header-btns {
+                width: 100%
+            }
+
+            .header-btns .btn {
+                flex: 1;
+                justify-content: center
+            }
+
+            .platform-row {
+                grid-template-columns: 1fr
+            }
+
+            .social-grid {
+                grid-template-columns: 1fr
+            }
+
+            .right-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 13px
+            }
+
+            .personality-banner {
+                grid-column: span 2
+            }
+
+            .schedule-row {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .schedule-row .sch-btn {
+                grid-column: span 2;
+                width: 100%;
+                justify-content: center
+            }
+
+            .modal {
+                max-width: 100%;
+                margin: 10px;
+                border-radius: 16px
+            }
+
+            .prev-modal {
+                max-width: 100%
+            }
+        }
+
+        @media(max-width:480px) {
+            body {
+                padding: 0
+            }
+
+            .shell {
+                border-radius: 0;
+                min-height: 100vh
+            }
+
+            .platform-row {
+                grid-template-columns: 1fr
+            }
+
+            .right-panel {
+                grid-template-columns: 1fr
+            }
+
+            .personality-banner {
+                grid-column: auto
+            }
+
+            .cf-row {
+                grid-template-columns: 1fr
+            }
+
+            .schedule-row {
+                grid-template-columns: 1fr
+            }
+
+            .schedule-row .sch-btn {
+                grid-column: auto;
+                width: 100%
+            }
+
+            .mini-stats {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .modal {
+                margin: 6px;
+                border-radius: 14px
+            }
+
+            .modal-bd {
+                padding: 16px 18px 20px
+            }
+
+            .modal-hd {
+                padding: 18px 18px 0
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="backdrop" id="backdrop"></div>
+
+    <!-- UPLOAD MODAL -->
+    <div class="modal-overlay" id="m-upload">
+        <div class="modal">
+            <div class="modal-hd">
+                <span class="modal-title">Upload Images</span>
+                <button class="modal-x" data-close="m-upload">✕</button>
+            </div>
+            <div class="modal-bd">
+                <div class="upzone">
+                    <div class="up-icon-w"><svg width="22" height="22" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="1.8">
+                            <rect x="3" y="3" width="18" height="18" rx="3" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg></div>
+                    <div class="up-title">Drop images here or click to browse</div>
+                    <div class="up-sub">JPG, PNG, GIF — tagged and used automatically in posts</div>
+                </div>
+                <div class="form-g">
+                    <label class="form-lbl">Tag this image as</label>
+                    <select class="form-inp">
+                        <option>Personal Photo (casual — X only)</option>
+                        <option>Professional Headshot (LinkedIn safe)</option>
+                        <option>Infographic / Data viz (all platforms)</option>
+                        <option>Meme-ready (X only)</option>
+                        <option>Quote card (all platforms)</option>
+                    </select>
+                </div>
+                <div class="modal-ft">
+                    <button class="btn btn-outline btn-sm" data-close="m-upload">Cancel</button>
+                    <button class="btn btn-primary btn-sm"><svg width="12" height="12" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL -->
+    <div class="modal-overlay" id="m-preview">
+        <div class="modal prev-modal">
+            <div class="modal-hd">
+                <span class="modal-title">Review & Approve</span>
+                <button class="modal-x" data-close="m-preview">✕</button>
+            </div>
+            <div class="modal-bd">
+                <div class="prev-tabs">
+                    <div class="prev-tab active" data-plat="li">🔵 LinkedIn</div>
+                    <div class="prev-tab" data-plat="xt">🐦 X (Twitter)</div>
+                </div>
+                <div id="prev-li">
+                    <div style="border:1.5px solid #0a66c2;border-radius:var(--r);overflow:hidden;margin-bottom:14px">
+                        <div
+                            style="background:#e8f0fe;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(10,102,194,.15);flex-wrap:wrap">
+                            <div class="avatar" style="width:32px;height:32px;font-size:12px">TM</div>
+                            <div>
+                                <div style="font-size:12.5px;font-weight:800;color:var(--ink)">Totok Michael</div>
+                                <div style="font-size:10.5px;color:var(--ink4)">Personal · Professional Mode 🎩</div>
+                            </div>
+                            <div
+                                style="margin-left:auto;font-size:10px;font-weight:700;color:#0a66c2;background:rgba(10,102,194,.1);padding:2px 8px;border-radius:20px">
+                                Story Time</div>
+                        </div>
+                        <div style="padding:14px;font-size:13px;line-height:1.7;color:var(--ink2);word-break:break-word"
+                            id="prev-li-text">
+                            Three years ago I shipped a feature nobody asked for.<br><br>We thought we were being clever
+                            — added an AI-powered "smart suggestions" layer on top of a perfectly functional
+                            workflow.<br><br>Engagement dropped 23% in the first two weeks.<br><br>Lesson? Your users
+                            already have a system. Disrupting it isn't innovation — it's friction with a shiny
+                            label.<br><br>What's the most "helpful" feature you've seen that actually made things worse?
+                        </div>
+                    </div>
+                </div>
+                <div id="prev-xt" style="display:none">
+                    <div style="border:1.5px solid #000;border-radius:var(--r);overflow:hidden;margin-bottom:14px">
+                        <div
+                            style="background:#f0f0f0;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(0,0,0,.1);flex-wrap:wrap">
+                            <div class="avatar" style="width:32px;height:32px;font-size:12px">TM</div>
+                            <div>
+                                <div style="font-size:12.5px;font-weight:800;color:var(--ink)">@totok_michael</div>
+                                <div style="font-size:10.5px;color:var(--ink4)">X Account · Chaotic Mode 😈</div>
+                            </div>
+                            <div
+                                style="margin-left:auto;font-size:10px;font-weight:700;color:#333;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:20px">
+                                Ragebait</div>
+                        </div>
+                        <div style="padding:14px;font-size:13px;line-height:1.7;color:var(--ink2);word-break:break-word"
+                            id="prev-xt-text">
+                            we added "AI suggestions" to our app and engagement dropped 23% 💀<br><br>turns out users
+                            don't want smart. they want fast.<br><br>"helpful features" nobody asked for = tech debt in
+                            a lab coat<br><br>anyway. ship less. ship better. good night 🫡
+                        </div>
+                    </div>
+                </div>
+                <div class="bot-note"><strong>🤖 Bot note:</strong> LinkedIn uses story structure + professional close.
+                    X is punchy, lowercase-casual, mic drop ending. Same topic, completely different energy.</div>
+                <div class="modal-ft">
+                    <button class="btn btn-outline btn-sm" data-close="m-preview">Edit</button>
+                    <button class="btn btn-danger btn-sm" data-close="m-preview">Discard</button>
+                    <button class="btn btn-primary btn-sm" data-close="m-preview"><svg width="12" height="12"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>Approve & Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHELL -->
+    <div class="shell">
+
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9.5" stroke="white" stroke-width="2" />
+                        <circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="2" />
+                        <circle cx="12" cy="12" r="1.5" fill="white" />
+                    </svg></div>
+                <span class="logo-name">Donezo</span>
+            </div>
+            <div class="nav-label">Menu</div>
+            <div class="nav-item" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    </svg></div>Dashboard
+            </div>
+            <div class="nav-item" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg></div>Tasks<span class="nav-badge">12+</span>
+            </div>
+            <div class="nav-item" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg></div>Calendar
+            </div>
+            <div class="nav-item active" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg></div>Social Bot<span class="nav-badge">3</span>
+            </div>
+            <div class="nav-item" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg></div>Analytics
+            </div>
+            <div class="nav-label" style="margin-top:8px">General</div>
+            <div class="nav-item" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg></div>Settings
+            </div>
+            <div class="nav-item" data-nav>
+                <div class="nav-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg></div>Logout
+            </div>
+            <div class="sidebar-spacer"></div>
+            <div class="sidebar-promo">
+                <div class="promo-icon-w"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white"
+                        stroke-width="2">
+                        <rect x="5" y="2" width="14" height="20" rx="2" />
+                        <line x1="12" y1="18" x2="12.01" y2="18" />
+                    </svg></div>
+                <div class="promo-title"><strong>Download</strong> our<br>Mobile App</div>
+                <div class="promo-sub">Manage posts on the go</div>
+                <button class="promo-btn">Download</button>
+            </div>
+        </aside>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+                <div class="search-box">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                        style="color:var(--ink4);flex-shrink:0">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" placeholder="Search posts, topics, queue...">
+                    <span class="kbd">⌘ F</span>
+                </div>
+                <div class="topbar-right">
+                    <button class="icon-btn"><svg width="15" height="15" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg><span class="notif-dot"></span></button>
+                    <div class="divider-v"></div>
+                    <div class="user-chip">
+                        <div class="avatar">TM</div>
+                        <div>
+                            <div class="u-name">Totok Michael</div>
+                            <div class="u-email">tmichael20@mail.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">Social Bot 🤖</div>
+                        <div class="page-sub">Drop a topic. Bot handles personality, flavor &amp; platform tone.</div>
+                    </div>
+                    <div class="header-btns">
+                        <button class="btn btn-outline" data-open="m-upload"><svg width="13" height="13" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="3" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                            </svg>Upload Images</button>
+                        <button class="btn btn-primary" data-open="m-preview"><svg width="13" height="13" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>Review Queue (3)</button>
+                    </div>
+                </div>
+
+                <div class="platform-row">
+                    <div class="platform-card linkedin">
+                        <div class="plat-icon li">🔵</div>
+                        <div class="plat-info">
+                            <div class="plat-name">LinkedIn</div>
+                            <div class="plat-mode">
+                                <div class="plat-mode-dot on"></div>Active · Auto-posting on
+                            </div>
+                            <div class="plat-tone-badge pro">🎩 Professional Mode</div>
+                        </div>
+                        <div class="plat-stats">
+                            <div class="plat-stat-num">18</div>
+                            <div class="plat-stat-lbl">Posts this month</div>
+                        </div>
+                    </div>
+                    <div class="platform-card x-tw">
+                        <div class="plat-icon xt">🐦</div>
+                        <div class="plat-info">
+                            <div class="plat-name">X (Twitter)</div>
+                            <div class="plat-mode">
+                                <div class="plat-mode-dot on"></div>Active · Auto-posting on
+                            </div>
+                            <div class="plat-tone-badge fun">😈 Chaotic Mode</div>
+                        </div>
+                        <div class="plat-stats">
+                            <div class="plat-stat-num">34</div>
+                            <div class="plat-stat-lbl">Posts this month</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-grid">
+
+                    <!-- CREATE POST -->
+                    <div class="card">
+                        <div class="card-head">
+                            <span class="card-title">Create Post</span>
+                            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+                                <div class="generating" id="genStatus" style="display:none">
+                                    <div class="gen-dots"><span></span><span></span><span></span></div>
+                                    <span>Generating...</span>
+                                </div>
+                                <button class="btn btn-outline btn-sm" id="btn-regen"><svg width="11" height="11"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="23 4 23 10 17 10" />
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                    </svg>Regenerate</button>
+                            </div>
+                        </div>
+
+                        <textarea class="topic-input" id="topicInput" rows="2"
+                            placeholder="What's the topic? e.g. 'Tech', 'Startup Life', 'AI', 'Monday morning feelings'..."></textarea>
+
+                        <div id="topicTags" style="margin-bottom:12px;display:none">
+                            <span class="slabel">Saved Topics</span>
+                            <div id="tagsWrap"></div>
+                        </div>
+
+                        <div class="cf-row">
+                            <div class="cf-group"><label>Category</label>
+                                <select class="cf-select" id="categorySelect">
+                                    <option value="">— pick a category —</option>
+                                    <option value="tech">💻 Tech &amp; Software</option>
+                                    <option value="startup">🚀 Startup Life</option>
+                                    <option value="mindset">🧠 Mindset &amp; Growth</option>
+                                    <option value="career">💼 Career &amp; Work</option>
+                                    <option value="random">🎲 Random Thoughts</option>
+                                    <option value="personal">🙋 Personal</option>
+                                </select>
+                            </div>
+                            <div class="cf-group"><label>Flavor <span
+                                        style="font-weight:400;color:var(--ink4);text-transform:none">(auto-picked)</span></label>
+                                <select class="cf-select" id="flavorSelect">
+                                    <option value="">— auto-select —</option>
+                                    <option value="storytime">📖 Story Time</option>
+                                    <option value="hottake">🔥 Hot Take</option>
+                                    <option value="foodthought">🍽️ Food for Thought</option>
+                                    <option value="update">📰 New Update</option>
+                                    <option value="ragebait">😤 Ragebait</option>
+                                    <option value="random">🎲 Random Thought</option>
+                                    <option value="tips">💡 Quick Tips</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="flavorSection" style="display:none;margin-bottom:14px">
+                            <span class="slabel">Suggested Flavors for this Category</span>
+                            <div class="flavor-pills" id="flavorPills"></div>
+                        </div>
+
+                        <div style="margin-bottom:16px">
+                            <span class="slabel">Post to</span>
+                            <div class="plat-toggle-row">
+                                <div class="plat-toggle on li" id="tog-li">
+                                    <div class="plat-toggle-dot"></div>🔵 LinkedIn
+                                </div>
+                                <div class="plat-toggle on xt" id="tog-xt">
+                                    <div class="plat-toggle-dot"></div>🐦 X (Twitter)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px">
+                            <span class="slabel" style="margin:0">Generated Posts</span>
+                            <span style="flex:1;height:1px;background:var(--ink5);display:block"></span>
+                        </div>
+
+                        <div class="post-tabs">
+                            <div class="post-tab active" data-tab="li">🔵 LinkedIn</div>
+                            <div class="post-tab" data-tab="xt">🐦 X (Twitter)</div>
+                        </div>
+
+                        <div id="post-li" class="post-preview">
+                            <div class="post-preview-head">
+                                <div class="pp-plat-icon" style="background:#e8f0fe">🔵</div>
+                                <div class="pp-plat-name">LinkedIn</div>
+                                <div class="pp-tone pro">🎩 Professional</div>
+                                <div class="pp-flavor-tag" id="li-flavor-tag">Story Time</div>
+                            </div>
+                            <div class="post-body">
+                                <div class="post-text" id="li-post-text">Three years ago I shipped a feature nobody
+                                    asked for.<br><br>We thought we were being clever — added an AI-powered "smart
+                                    suggestions" layer on top of a perfectly functional workflow.<br><br>Engagement
+                                    dropped 23% in the first two weeks.<br><br>Lesson? Your users already have a system.
+                                    Disrupting it isn't innovation — it's friction with a shiny label.<br><br>What's the
+                                    most <span class="hl">"helpful" feature</span> you've seen that actually made things
+                                    worse?</div>
+                            </div>
+                            <div class="post-img-strip" id="li-img-strip" style="display:none"></div>
+                            <div class="post-actions">
+                                <button class="btn btn-outline btn-sm" data-edit="li">✏️ Edit</button>
+                                <button class="btn btn-outline btn-sm" data-regen-plat="li">🔄 Regen</button>
+                                <button class="btn btn-primary btn-sm" style="margin-left:auto"
+                                    data-open="m-preview">👁️ Review</button>
+                            </div>
+                        </div>
+
+                        <div id="post-xt" class="post-preview" style="display:none">
+                            <div class="post-preview-head">
+                                <div class="pp-plat-icon" style="background:#f0f0f0">🐦</div>
+                                <div class="pp-plat-name">X (Twitter)</div>
+                                <div class="pp-tone fun">😈 Chaotic</div>
+                                <div class="pp-flavor-tag" id="xt-flavor-tag">Ragebait</div>
+                            </div>
+                            <div class="post-body">
+                                <div class="post-text" id="xt-post-text">we added "AI suggestions" to our app and
+                                    engagement dropped 23% 💀<br><br>turns out users don't want smart. they want
+                                    fast.<br><br>"helpful features" nobody asked for = tech debt in a lab
+                                    coat<br><br>anyway. ship less. ship better. good night 🫡</div>
+                            </div>
+                            <div class="post-img-strip" id="xt-img-strip" style="display:none"></div>
+                            <div class="post-actions">
+                                <button class="btn btn-outline btn-sm" data-edit="xt">✏️ Edit</button>
+                                <button class="btn btn-outline btn-sm" data-regen-plat="xt">🔄 Regen</button>
+                                <button class="btn btn-primary btn-sm" style="margin-left:auto"
+                                    data-open="m-preview">👁️ Review</button>
+                            </div>
+                        </div>
+
+                        <div class="schedule-row">
+                            <div class="sch-group"><label>Date</label><input class="sch-input" type="date"
+                                    value="2026-03-17"></div>
+                            <div class="sch-group"><label>Time (±15min)</label><input class="sch-input" type="time"
+                                    value="09:00"></div>
+                            <button class="btn btn-primary sch-btn" id="btn-schedule"><svg width="13" height="13"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>Schedule</button>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT PANEL -->
+                    <div class="right-panel">
+
+                        <div class="personality-banner">
+                            <div class="pb-head">
+                                <div class="pb-icon">🎭</div>
+                                <div>
+                                    <div class="pb-title">Personality Engine</div>
+                                    <div class="pb-sub">How the bot sounds today</div>
+                                </div>
+                            </div>
+                            <div class="mode-row">
+                                <div class="mode-item active" data-mode>
+                                    <div class="mode-emoji">😈</div>
+                                    <div class="mode-name">Chaotic</div>
+                                    <div class="mode-desc">Ragebait, lowercase, punchy</div>
+                                </div>
+                                <div class="mode-item" data-mode>
+                                    <div class="mode-emoji">🎩</div>
+                                    <div class="mode-name">Professional</div>
+                                    <div class="mode-desc">LinkedIn safe. Stories + insights</div>
+                                </div>
+                                <div class="mode-item" data-mode>
+                                    <div class="mode-emoji">🧪</div>
+                                    <div class="mode-name">Experimental</div>
+                                    <div class="mode-desc">Wildcard. No rules, all vibes</div>
+                                </div>
+                                <div class="mode-item" data-mode>
+                                    <div class="mode-emoji">☕</div>
+                                    <div class="mode-name">Chill</div>
+                                    <div class="mode-desc">Casual thoughts, feels human</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-head">
+                                <span class="card-title">Image Library</span>
+                                <button class="btn btn-outline btn-sm" data-open="m-upload"><svg width="11" height="11"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>Upload</button>
+                            </div>
+                            <div class="img-lib-grid">
+                                <div class="lib-img" data-img data-tag="personal">🤳<div class="lib-tag-label">personal
+                                    </div>
+                                    <div class="sel-chk"><svg width="9" height="9" fill="none" viewBox="0 0 24 24"
+                                            stroke="white" stroke-width="3">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg></div>
+                                </div>
+                                <div class="lib-img" data-img data-tag="headshot">👔<div class="lib-tag-label">headshot
+                                    </div>
+                                    <div class="sel-chk"><svg width="9" height="9" fill="none" viewBox="0 0 24 24"
+                                            stroke="white" stroke-width="3">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg></div>
+                                </div>
+                                <div class="lib-img" data-img data-tag="infographic">📊<div class="lib-tag-label">
+                                        infographic</div>
+                                    <div class="sel-chk"><svg width="9" height="9" fill="none" viewBox="0 0 24 24"
+                                            stroke="white" stroke-width="3">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg></div>
+                                </div>
+                                <div class="lib-img" data-img data-tag="meme">😂<div class="lib-tag-label">meme</div>
+                                    <div class="sel-chk"><svg width="9" height="9" fill="none" viewBox="0 0 24 24"
+                                            stroke="white" stroke-width="3">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg></div>
+                                </div>
+                                <div class="lib-img" data-img data-tag="quote">💬<div class="lib-tag-label">quote card
+                                    </div>
+                                    <div class="sel-chk"><svg width="9" height="9" fill="none" viewBox="0 0 24 24"
+                                            stroke="white" stroke-width="3">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg></div>
+                                </div>
+                                <div class="lib-img lib-img-add" data-open="m-upload">+</div>
+                            </div>
+                            <div class="lib-hint">🔵 LinkedIn: headshot, infographic, quote<br>🐦 X: meme, personal, all
+                                types</div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-head">
+                                <span class="card-title">Post Queue</span>
+                                <span
+                                    style="font-size:11px;font-weight:700;background:rgba(45,138,86,.1);color:var(--g2);padding:3px 8px;border-radius:20px">3
+                                    pending</span>
+                            </div>
+                            <div class="queue-item">
+                                <div class="q-plat li">🔵</div>
+                                <div class="q-info">
+                                    <div class="q-text">Three years ago I shipped a feature nobody...</div>
+                                    <div class="q-meta"><span class="q-flavor">Story Time</span>· LinkedIn</div>
+                                </div>
+                                <div class="q-badge soon">~9am</div>
+                            </div>
+                            <div class="queue-item">
+                                <div class="q-plat xt">🐦</div>
+                                <div class="q-info">
+                                    <div class="q-text">we added "AI suggestions" and engagement dropped...</div>
+                                    <div class="q-meta"><span class="q-flavor">Ragebait</span>· X</div>
+                                </div>
+                                <div class="q-badge soon">~9am</div>
+                            </div>
+                            <div class="queue-item">
+                                <div class="q-plat li">🔵</div>
+                                <div class="q-info">
+                                    <div class="q-text">Hot take: most "founders" are just...</div>
+                                    <div class="q-meta"><span class="q-flavor">Hot Take</span>· LinkedIn</div>
+                                </div>
+                                <div class="q-badge later">Mar 18</div>
+                            </div>
+                            <button class="btn btn-outline btn-sm"
+                                style="width:100%;justify-content:center;margin-top:10px" data-open="m-preview">View All
+                                &amp; Approve</button>
+                        </div>
+
+                        <div class="mini-stats">
+                            <div class="mini-stat">
+                                <div class="ms-num">847</div>
+                                <div class="ms-lbl">Total Impressions</div>
+                                <div class="ms-change">↑ 34% this week</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="ms-num">52</div>
+                                <div class="ms-lbl">Posts Scheduled</div>
+                                <div class="ms-change">↑ 8 this month</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // SIDEBAR
+            var sidebar = document.getElementById('sidebar');
+            var backdrop = document.getElementById('backdrop');
+            document.getElementById('hamburger').addEventListener('click', function () {
+                sidebar.classList.add('open');
+                backdrop.classList.add('open');
+            });
+            backdrop.addEventListener('click', function () {
+                sidebar.classList.remove('open');
+                backdrop.classList.remove('open');
+            });
+
+            // NAV
+            document.querySelectorAll('[data-nav]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    document.querySelectorAll('[data-nav]').forEach(function (n) { n.classList.remove('active'); });
+                    el.classList.add('active');
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('open');
+                        backdrop.classList.remove('open');
+                    }
+                });
+            });
+
+            // MODALS
+            function openModal(id) { var o = document.getElementById(id); if (!o) return; o.style.display = 'flex'; requestAnimationFrame(function () { requestAnimationFrame(function () { o.classList.add('open'); }); }); }
+            function closeModal(id) { var o = document.getElementById(id); if (!o) return; o.classList.remove('open'); setTimeout(function () { o.style.display = 'none'; }, 300); }
+            document.querySelectorAll('[data-open]').forEach(function (el) { el.addEventListener('click', function () { openModal(el.getAttribute('data-open')); }); });
+            document.querySelectorAll('[data-close]').forEach(function (el) { el.addEventListener('click', function () { closeModal(el.getAttribute('data-close')); }); });
+            document.querySelectorAll('.modal-overlay').forEach(function (o) { o.addEventListener('click', function (e) { if (e.target === o) closeModal(o.id); }); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(function (o) { closeModal(o.id); }); });
+
+            // PREVIEW TABS
+            document.querySelectorAll('.prev-tab').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.prev-tab').forEach(function (t) { t.classList.remove('active'); });
+                    tab.classList.add('active');
+                    var p = tab.getAttribute('data-plat');
+                    document.getElementById('prev-li').style.display = p === 'li' ? 'block' : 'none';
+                    document.getElementById('prev-xt').style.display = p === 'xt' ? 'block' : 'none';
+                });
+            });
+
+            // POST TABS
+            document.querySelectorAll('.post-tab').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.post-tab').forEach(function (t) { t.classList.remove('active'); });
+                    tab.classList.add('active');
+                    var p = tab.getAttribute('data-tab');
+                    document.getElementById('post-li').style.display = p === 'li' ? 'block' : 'none';
+                    document.getElementById('post-xt').style.display = p === 'xt' ? 'block' : 'none';
+                });
+            });
+
+            // PLATFORM TOGGLES
+            document.getElementById('tog-li').addEventListener('click', function () { this.classList.toggle('on'); });
+            document.getElementById('tog-xt').addEventListener('click', function () { this.classList.toggle('on'); });
+
+            // CATEGORY → FLAVORS
+            var catFlavors = {
+                tech: ['📖 Story Time', '🔥 Hot Take', '😤 Ragebait', '📰 New Update', '💡 Quick Tips'],
+                startup: ['📖 Story Time', '🔥 Hot Take', '🍽️ Food for Thought', '😤 Ragebait'],
+                mindset: ['🍽️ Food for Thought', '📖 Story Time', '☕ Random Thought', '🔥 Hot Take'],
+                career: ['📖 Story Time', '💡 Quick Tips', '🍽️ Food for Thought', '🔥 Hot Take'],
+                random: ['🎲 Random Thought', '😤 Ragebait', '🔥 Hot Take', '📖 Story Time'],
+                personal: ['📖 Story Time', '☕ Random Thought', '🎲 Random Thought']
+            };
+            document.getElementById('categorySelect').addEventListener('change', function () {
+                var val = this.value;
+                var sec = document.getElementById('flavorSection');
+                var pills = document.getElementById('flavorPills');
+                if (!val) { sec.style.display = 'none'; return; }
+                pills.innerHTML = '';
+                (catFlavors[val] || []).forEach(function (f, i) {
+                    var p = document.createElement('div');
+                    p.className = 'f-pill' + (i === 0 ? ' active' : '');
+                    p.textContent = f;
+                    p.addEventListener('click', function () { document.querySelectorAll('.f-pill').forEach(function (x) { x.classList.remove('active'); }); p.classList.add('active'); });
+                    pills.appendChild(p);
+                });
+                sec.style.display = 'block';
+                var topic = document.getElementById('topicInput').value.trim();
+                if (topic) addTag(topic);
+            });
+
+            // TOPIC TAGS
+            var saved = [];
+            function addTag(t) {
+                if (saved.indexOf(t) > -1) return;
+                saved.push(t);
+                var wrap = document.getElementById('tagsWrap');
+                var tag = document.createElement('span');
+                tag.className = 'topic-tag';
+                tag.innerHTML = t + ' <span class="rm">×</span>';
+                tag.querySelector('.rm').addEventListener('click', function () { tag.remove(); saved.splice(saved.indexOf(t), 1); if (!saved.length) document.getElementById('topicTags').style.display = 'none'; });
+                wrap.appendChild(tag);
+                document.getElementById('topicTags').style.display = 'block';
+            }
+
+            // IMAGE SELECT
+            document.querySelectorAll('[data-img]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    el.classList.toggle('selected');
+                    var sel = Array.from(document.querySelectorAll('[data-img].selected'));
+                    ['li', 'xt'].forEach(function (p) {
+                        var strip = document.getElementById(p + '-img-strip');
+                        strip.innerHTML = '';
+                        if (!sel.length) { strip.style.display = 'none'; return; }
+                        strip.style.display = 'flex';
+                        sel.forEach(function (img) {
+                            var th = document.createElement('div'); th.className = 'img-thumb';
+                            var map = { personal: '🤳', headshot: '👔', infographic: '📊', meme: '😂', quote: '💬' };
+                            th.textContent = map[img.getAttribute('data-tag')] || '🖼️';
+                            strip.appendChild(th);
+                        });
+                    });
+                });
+            });
+
+            // PERSONALITY
+            document.querySelectorAll('[data-mode]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    document.querySelectorAll('[data-mode]').forEach(function (m) { m.classList.remove('active'); });
+                    el.classList.add('active');
+                });
+            });
+
+            // POST DATA
+            var liP = {
+                tech: ["Unpopular opinion: most developers over-engineer solutions to problems that a spreadsheet would solve.\n\nI've shipped 3 products in the last 2 years. The one that scaled fastest? A glorified Google Sheet with a nice UI.\n\nComplexity is a tax. Every abstraction layer is debt.\n\nWhat's the simplest thing you've built that worked embarrassingly well?", "Three years ago I shipped a feature nobody asked for.\n\nWe added AI-powered suggestions on top of a perfectly functional workflow.\n\nEngagement dropped 23% in two weeks.\n\nLesson? Your users already have a system. Disrupting it isn't innovation — it's friction with a shiny label.\n\nWhat's the most 'helpful' feature you've seen that actually made things worse?"],
+                startup: ["Nobody talks about the 11pm texts to co-founders.\n\nThe 'are we actually going to make it?' convos.\n\nStartup culture glorifies the highlights. The real work happens in the quiet, uncertain moments.\n\nTo anyone grinding right now — you're not behind. You're in the middle of the story."],
+                mindset: ["Most people don't have a productivity problem.\n\nThey have a clarity problem.\n\nWhen you know exactly what matters, getting it done is easy.\n\nClarity isn't a luxury — it's the work."],
+                career: ["Nobody teaches you this in school:\n\nYour reputation travels faster than your resume.\n\nEvery interaction is a data point someone is collecting about you.\n\nBe the person who gets things done without drama. That's rarer than any skill on LinkedIn."],
+                random: ["3am thought:\n\nWe spend 8 hours a day optimizing how we work and zero hours optimizing what we work on.\n\nThe tool is not the problem.\n\nThe direction is."],
+                personal: ["The version of me from 3 years ago would not recognize this life.\n\nNot because everything changed overnight. But because I kept showing up even when nothing seemed to be working.\n\nCompounding applies to effort, not just money.\n\nKeep going."]
+            };
+            var xtP = {
+                tech: ["unpopular opinion: most apps don't need AI\n\nwe just add it so we can put it in the pitch deck\n\nnot everything is a nail 🔨", "we added 'AI suggestions' and engagement dropped 23% 💀\n\nturns out users don't want smart. they want fast.\n\nship less. ship better. good night 🫡"],
+                startup: ["the startup journey in 3 acts:\n1. we're going to change the world\n2. wait why is this so hard\n3. ok maybe just this one small thing\n\nstill valid 🤷"],
+                mindset: ["productivity hack nobody sells you:\n\njust know what actually matters\n\nthat's it. that's the hack.\n\n3am wisdom 🌙"],
+                career: ["your reputation > your resume\n\nalways\n\n💀 hot take but tell me i'm wrong"],
+                random: ["been optimizing HOW i work for years\n\nonly recently questioned WHAT i'm working on\n\nbig difference 🙃"],
+                personal: ["3 years ago version of me would be confused\n\ncurrent me is just glad he kept going\n\ncompound interest applies to effort too btw 🤫"]
+            };
+
+            function doRegen() {
+                var cat = document.getElementById('categorySelect').value || 'tech';
+                var la = liP[cat] || liP.tech, xa = xtP[cat] || xtP.tech;
+                var li = la[Math.floor(Math.random() * la.length)], xt = xa[Math.floor(Math.random() * xa.length)];
+                var gs = document.getElementById('genStatus');
+                gs.style.display = 'flex';
+                setTimeout(function () {
+                    gs.style.display = 'none';
+                    document.getElementById('li-post-text').innerHTML = li.replace(/\n/g, '<br>');
+                    document.getElementById('xt-post-text').innerHTML = xt.replace(/\n/g, '<br>');
+                    document.getElementById('prev-li-text').innerHTML = li.replace(/\n/g, '<br>');
+                    document.getElementById('prev-xt-text').innerHTML = xt.replace(/\n/g, '<br>');
+                }, 1200);
+            }
+            document.getElementById('btn-regen').addEventListener('click', doRegen);
+            document.querySelectorAll('[data-regen-plat]').forEach(function (el) { el.addEventListener('click', doRegen); });
+
+            // EDIT
+            document.querySelectorAll('[data-edit]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    var t = document.getElementById(el.getAttribute('data-edit') + '-post-text');
+                    t.contentEditable = 'true'; t.focus();
+                    t.style.outline = '1.5px solid var(--g3)'; t.style.borderRadius = '6px'; t.style.padding = '4px';
+                    t.onblur = function () { t.contentEditable = 'false'; t.style.outline = 'none'; t.style.padding = '0'; };
+                });
+            });
+
+            // SCHEDULE
+            document.getElementById('btn-schedule').addEventListener('click', function () {
+                var b = this;
+                b.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Scheduled!';
+                b.style.background = 'var(--g3)';
+                setTimeout(function () { b.innerHTML = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Schedule'; b.style.background = ''; }, 2500);
+            });
+        })();
+    </script>
+</body>
+
+</html>
