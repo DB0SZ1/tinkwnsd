@@ -49,6 +49,9 @@ class Settings:
     # Timezone
     TIMEZONE: str
 
+    # Feature Flags
+    HTML: str = "true"
+
     @classmethod
     def from_env(cls) -> "Settings":
         """Build Settings from os.environ. Raises ValueError on missing keys."""

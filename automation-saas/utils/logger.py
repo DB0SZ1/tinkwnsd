@@ -16,13 +16,17 @@ class StructuredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         timestamp = datetime.now(timezone.utc).isoformat()
-        level = record.levelname
-        name = record.name
-        message = record.getMessage()
-        line = f"{timestamp} | {level:<8} | {name} | {message}"
+        log_obj = {
+            "timestamp": timestamp,
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
         if record.exc_info and record.exc_info[0] is not None:
-            line += "\n" + self.formatException(record.exc_info)
-        return line
+            log_obj["exception"] = self.formatException(record.exc_info)
+            
+        import json
+        return json.dumps(log_obj)
 
 
 def get_logger(name: str) -> logging.Logger:

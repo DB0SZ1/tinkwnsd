@@ -26,8 +26,9 @@ engine_kwargs = {"pool_pre_ping": True}
 if _db_url.startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
-    engine_kwargs["pool_size"] = 5
-    engine_kwargs["max_overflow"] = 10
+    engine_kwargs["pool_size"] = 20
+    engine_kwargs["max_overflow"] = 20
+    engine_kwargs["pool_recycle"] = 1800 # Prevent stale connections
 
 engine = create_engine(
     _db_url,
