@@ -28,6 +28,8 @@ os.makedirs("uploads", exist_ok=True)
 if settings.HTML.lower() == "true":
     os.makedirs("static/uploads", exist_ok=True)
 
+from utils.cloud_sync import restore_db_from_cloudinary
+
 # ── Scheduler lifecycle ──────────────────────────────────────────────────
 _scheduler = None
 
@@ -37,6 +39,9 @@ async def lifespan(app: FastAPI):
     global _scheduler
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables ensured")
+    
+    # Hydrate the SQLite database from Cloudinary before accepting requests
+    restore_db_from_cloudinary()
     
     _scheduler = create_scheduler()
     _scheduler.start()

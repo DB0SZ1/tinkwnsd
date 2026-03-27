@@ -25,6 +25,12 @@ class Settings:
     OPENROUTER_API_KEY: str
     OPENROUTER_MODEL: str
 
+    # Twilio (WhatsApp Integration)
+    TWILIO_ACCOUNT_SID: str
+    TWILIO_AUTH_TOKEN: str
+    TWILIO_WHATSAPP_NUMBER: str
+    USER_WHATSAPP_NUMBER: str
+
     # X / Twitter (API)
     X_API_KEY: str
     X_API_SECRET: str
@@ -48,6 +54,10 @@ class Settings:
 
     # Timezone
     TIMEZONE: str
+
+    # Cloud & Deployment
+    CLOUDINARY_URL: str = ""
+    PUBLIC_APP_URL: str = ""
 
     # Feature Flags
     HTML: str = "true"

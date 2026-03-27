@@ -102,3 +102,15 @@ class ImageLibrary(Base):
 
     def __repr__(self) -> str:
         return f"<ImageLibrary {self.filename} tag={self.tag}>"
+
+
+class WhatsAppState(Base):
+    __tablename__ = "whatsapp_state"
+    id = Column(Integer, primary_key=True, index=True)
+    user_phone = Column(String, unique=True, index=True)
+    state = Column(String, nullable=False) # e.g. "waiting_for_mood"
+    temp_image_path = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self) -> str:
+        return f"<WhatsAppState phone={self.user_phone} state={self.state}>"

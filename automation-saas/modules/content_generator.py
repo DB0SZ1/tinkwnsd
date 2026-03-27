@@ -58,36 +58,50 @@ async def generate_content(topic: str, platform: str = "x", flavor: str = "rando
         flavor = random.choice(valid_flavors)
         
     if personality == "random":
-        valid_personalities = ["chaotic", "professional", "experimental", "chill"]
+        valid_personalities = ["visionary", "analyst", "comedian", "mentor", "skeptic", "hype-beast", "chill", "chaotic"]
         personality = random.choice(valid_personalities)
 
     # 1. Platform Tone Calibration
     if platform == "linkedin":
         rules = (
-            "- **Tone:** Professional but warm. Storytelling ✅. No slang. Hot takes should be toned down.\n"
-            "- **Format:** Short paragraphs (1-2 sentences each). Use 1-2 relevant emojis.\n"
-            "- **Ending:** End with a genuine question to drive comments."
+            "- **Tone:** Professional but deeply human. Storytelling is mandatory. No dry corporate speak.\n"
+            "- **Format:** Use plenty of white space. 1-2 sentences per paragraph.\n"
+            "- **Engagement:** End with a question that feels like a conversation starter, not a marketing survey."
         )
-        if flavor == "ragebait":
-            flavor = "hottake" # LinkedIn is too professional for pure ragebait
     elif platform == "x":
         rules = (
-            "- **Tone:** Full personality. Shorter, punchier sentences. Lowercase casual is okay.\n"
-            "- **Constraints:** MUST be under 280 characters. Be concise.\n"
-            "- **Ending:** Drop a mic, no standard 'what do you think' questions."
+            "- **Tone:** High signal-to-noise. Be punchy. Use lowercase for casual vibes if appropriate.\n"
+            "- **Constraints:** Strictly under 280 characters.\n"
+            "- **Vibe:** Sharp, witty, and immediate."
         )
-    else:  # 'both' or others
-        rules = "- **Tone:** A mix. Casual but insightful. Not too long."
+    else: 
+        rules = "- **Tone:** Balanced. Engaging and clear."
 
-    # 2. Add "Human Signals" based on personality mode
-    if personality == "chaotic":
-        rules += "\n- **Human Signals:** Use lowercase often. Be slightly provocative or mischievous."
-    elif personality == "professional":
-        rules += "\n- **Human Signals:** Clear, structured insights. Use narrative arcs."
+    # 2. Personality Depth & Human Signals
+    if personality == "visionary":
+        rules += "\n- **Persona:** You see the future. Talk about 'what's next' and 'the big picture'. Be inspiring and slightly idealistic."
+        rules += "\n- **Human Signals:** Use words like 'imagine', 'possibility', 'tomorrow'. Avoid jargon."
+    elif personality == "analyst":
+        rules += "\n- **Persona:** You are skeptical and data-obsessed. Break things down. Be precise and realistic."
+        rules += "\n- **Human Signals:** Use phrases like 'the reality is', 'the math doesn't add up', 'here is the actual breakdown'."
+    elif personality == "comedian":
+        rules += "\n- **Persona:** You don't take anything seriously. Use irony, self-deprecation, and wit."
+        rules += "\n- **Human Signals:** Use 'tbh', 'lol', or dry observations about how ridiculous things are."
+    elif personality == "mentor":
+        rules += "\n- **Persona:** You want to help. Share lessons, avoid ego, be warm and encouraging."
+        rules += "\n- **Human Signals:** Use 'I wish I knew this earlier', 'Here is a small tip', 'You've got this'."
+    elif personality == "skeptic":
+        rules += "\n- **Persona:** You are the contrarian. Challenge the status quo. Be respectfully blunt."
+        rules += "\n- **Human Signals:** Use 'Is it just me or...', 'Unpopular opinion:', 'We need to stop pretending that...'."
+    elif personality == "hype-beast":
+        rules += "\n- **Persona:** High energy. Everything is amazing. Be the ultimate cheerleader."
+        rules += "\n- **Human Signals:** Use all-caps for emphasis occasionally. Use '!'. Be very promotional but authentic."
+    elif personality == "chaotic":
+        rules += "\n- **Persona:** Mischievous and unpredictable. Break the fourth wall. Be slightly weird."
+        rules += "\n- **Human Signals:** Start mid-thought. Use chaotic formatting. Be unapologetically you."
     elif personality == "chill":
-        rules += "\n- **Human Signals:** Treat the reader like a friend. Use imperfect openers like 'Okay so hear me out...' or 'Not gonna lie...'"
-    else: # experimental
-        rules += "\n- **Human Signals:** Use cliffhangers or self-referential notes like 'I posted about this last week but...'"
+        rules += "\n- **Persona:** Relaxed, low-stakes, effortlessly cool. Like a Sunday morning coffee chat."
+        rules += "\n- **Human Signals:** Use soft openers like 'just thinking about...', 'honestly...', 'no pressure but...'."
 
     # Combine into system prompt
     system_prompt = f"""You are a top-tier social media content creator writing for an automated bot persona.

@@ -18,7 +18,9 @@ import random
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from db.models import Topic, ImageLibrary
+from db.models import Topic, ImageLibrary, PostMetric, Lead
+from utils.twilio_client import send_whatsapp_message
+from utils.config import settings
 from db.session import SessionLocal
 from modules.content_generator import generate_content
 from modules.engagement_tracker import track_all_recent
@@ -27,6 +29,7 @@ from modules.linkedin_publisher import publish_to_linkedin
 from modules.x_publisher import publish_to_x
 from utils.logger import get_logger
 from utils.notifications import send_push_notification_sync
+from utils.cloud_sync import backup_db_to_cloudinary, keep_alive_ping
 
 logger = get_logger(__name__)
 
@@ -158,6 +161,27 @@ def log_leads() -> None:
         logger.error("log_leads failed: %s", exc, exc_info=True)
 
 
+# ── Job 5: Send WhatsApp Analytics ──────────────────────────────────────
+
+def send_whatsapp_analytics() -> None:
+    """Gather metrics and send a daily summary to the user's WhatsApp."""
+    if not settings.USER_WHATSAPP_NUMBER or not settings.TWILIO_ACCOUNT_SID:
+        return
+        
+    try:
+        db = SessionLocal()
+        metrics = db.query(PostMetric).all()
+        leads = db.query(Lead).count()
+        likes = sum(m.likes for m in metrics)
+        comments = sum(m.comments for m in metrics)
+        db.close()
+        
+        reply = f"📊 *Daily Analytics Summary*\n👍 Total Likes: {likes}\n💬 Total Comments: {comments}\n🎯 Total Leads: {leads}\n\n_Sent automatically by your SAAS Bot_"
+        send_whatsapp_message(settings.USER_WHATSAPP_NUMBER, reply)
+    except Exception as exc:
+        logger.error("send_whatsapp_analytics failed: %s", exc, exc_info=True)
+
+
 # ── Scheduler factory ───────────────────────────────────────────────────
 
 def create_scheduler() -> BackgroundScheduler:
@@ -200,5 +224,34 @@ def create_scheduler() -> BackgroundScheduler:
         replace_existing=True,
     )
 
-    logger.info("Scheduler configured with 4 jobs")
+    # Job 5 — Database Backup to Cloudinary every 3 hours
+    scheduler.add_job(
+        backup_db_to_cloudinary,
+        trigger="interval",
+        hours=3,
+        id="db_backup",
+        name="Cloudinary Database Backup",
+        replace_existing=True,
+    )
+
+    # Job 6 — Send WhatsApp Analytics at 17:30 UTC (After leads tracking)
+    scheduler.add_job(
+        send_whatsapp_analytics,
+        trigger=CronTrigger(hour=17, minute=30),
+        id="send_whatsapp_analytics",
+        name="Send WhatsApp Analytics",
+        replace_existing=True,
+    )
+
+    # Job 7 — Keep-Alive Ping every 10 minutes (Anti-Sleep for Render)
+    scheduler.add_job(
+        keep_alive_ping,
+        trigger="interval",
+        minutes=10,
+        id="keep_alive_ping",
+        name="Self Ping",
+        replace_existing=True,
+    )
+
+    logger.info("Scheduler configured with 6 jobs")
     return scheduler

@@ -18,9 +18,16 @@
 
   // NAV
   document.querySelectorAll('[data-nav]').forEach(function(el){
-    el.addEventListener('click', function(){
+    el.addEventListener('click', function(e){
+      e.preventDefault();
       document.querySelectorAll('[data-nav]').forEach(function(n){ n.classList.remove('active'); });
       el.classList.add('active');
+      
+      var target = el.getAttribute('data-nav');
+      document.querySelectorAll('.tab-content').forEach(function(tc){ tc.style.display = 'none'; });
+      var targetEl = document.getElementById('tab-' + target);
+      if(targetEl) targetEl.style.display = 'block';
+
       if(window.innerWidth <= 768){
         sidebar.classList.remove('open');
         backdrop.classList.remove('open');
@@ -84,7 +91,7 @@
         txt.innerHTML = 'Updating...';
         
         try {
-          let res = await fetch(`/api/jobs/${plat}/toggle`, { method: 'POST' });
+          let res = await fetch(`/api/v1/jobs/${plat}/toggle`, { method: 'POST' });
           let data = await res.json();
           
           if(data.status === 'paused') {
@@ -135,7 +142,7 @@
           btn.innerHTML = 'Saving...';
 
           try {
-              let res = await fetch('/api/topics', {
+              let res = await fetch('/api/v1/topics', {
                   method: 'POST',
                   headers: {'Content-Type': 'application/json'},
                   body: JSON.stringify({
@@ -186,7 +193,7 @@
           this.innerHTML = 'Uploading...';
 
           try {
-              let res = await fetch('/api/images', {
+              let res = await fetch('/api/v1/images', {
                   method: 'POST',
                   body: formData
               });
@@ -216,7 +223,7 @@
           this.innerHTML = 'Saving...';
 
           try {
-              let res = await fetch('/api/settings', {
+              let res = await fetch('/api/v1/settings', {
                   method: 'POST',
                   headers: {'Content-Type': 'application/json'},
                   body: JSON.stringify({

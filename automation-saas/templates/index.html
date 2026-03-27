@@ -91,166 +91,179 @@
         </div>
       </div>
 
-      <!-- PLATFORM CARDS -->
-      <div class="platform-row">
-        <div class="platform-card linkedin">
-          <div class="plat-icon li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div>
-          <div class="plat-info">
-            <div class="plat-name">LinkedIn Marketing</div>
-            <div class="plat-mode"><div class="plat-mode-dot on"></div> Publishing Active</div>
-            <div class="plat-tone-badge pro">Professional Tone</div>
+      <!-- DASHBOARD TAB -->
+      <div id="tab-dash" class="tab-content">
+        <!-- PLATFORM CARDS -->
+        <div class="platform-row">
+          <div class="platform-card linkedin">
+            <div class="plat-icon li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div>
+            <div class="plat-info">
+              <div class="plat-name">LinkedIn Marketing</div>
+              <div class="plat-mode"><div class="plat-mode-dot on"></div> Publishing Active</div>
+              <div class="plat-tone-badge pro">Professional Tone</div>
+            </div>
+            <div class="plat-stats">
+              <div class="plat-stat-num">{{ stats.li_queue }}</div>
+              <div class="plat-stat-lbl">In Queue</div>
+            </div>
           </div>
-          <div class="plat-stats">
-            <div class="plat-stat-num">{{ stats.li_queue }}</div>
-            <div class="plat-stat-lbl">In Queue</div>
+          
+          <div class="platform-card x-tw">
+            <div class="plat-icon xt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></div>
+            <div class="plat-info">
+              <div class="plat-name">X (Twitter) Hype</div>
+              <div class="plat-mode"><div class="plat-mode-dot on"></div> Publishing Active</div>
+              <div class="plat-tone-badge fun">Punchy Tone</div>
+            </div>
+            <div class="plat-stats">
+              <div class="plat-stat-num">{{ stats.x_queue }}</div>
+              <div class="plat-stat-lbl">In Queue</div>
+            </div>
           </div>
         </div>
-        
-        <div class="platform-card x-tw">
-          <div class="plat-icon xt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></div>
-          <div class="plat-info">
-            <div class="plat-name">X (Twitter) Hype</div>
-            <div class="plat-mode"><div class="plat-mode-dot on"></div> Publishing Active</div>
-            <div class="plat-tone-badge fun">Punchy Tone</div>
+
+        <!-- SOCIAL GRID (CREATE & PANELS) -->
+        <div class="social-grid">
+          
+          <!-- LEFT: CREATE TOPIC -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Feed the Engine</div>
+              <button class="btn btn-sm btn-outline" id="btn-submit-topic">Save Topic</button>
+            </div>
+            
+            <textarea id="topicInput" class="topic-input" rows="4" placeholder="What should we talk about? (e.g. 'Why micro-SaaS is better than VC funding')"></textarea>
+            
+            <!-- CONTROLS -->
+            <div class="cf-row">
+              <div class="cf-group">
+                <label>Content Flavor</label>
+                <select class="cf-select" id="flavorSelect">
+                  <option value="random">🎲 Auto-Randomize</option>
+                  <option value="storytime">📖 Story Time</option>
+                  <option value="hottake">🔥 Hot Take</option>
+                  <option value="foodthought">🍽️ Food for Thought</option>
+                  <option value="ragebait">😤 Ragebait</option>
+                  <option value="update">📰 Quick Update</option>
+                  <option value="tips">💡 Tactical Tips</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PLATFORM DISTRIBUTION -->
+            <label class="slabel" style="margin-top:10px">Distribute To</label>
+            <div class="plat-toggle-row">
+              <div class="plat-toggle on li" id="tog-li"><div class="plat-toggle-dot"></div> LinkedIn</div>
+              <div class="plat-toggle on xt" id="tog-xt"><div class="plat-toggle-dot"></div> X (Twitter)</div>
+            </div>
+            
+            <label class="slabel">Upcoming Queue</label>
+            <div>
+              {% for po in recent_posts %}
+              <div class="queue-item">
+                <div class="q-plat {{ 'li' if po.platform == 'linkedin' else 'xt' }}">
+                   {% if po.platform == 'linkedin' %}in{% else %}𝕏{% endif %}
+                </div>
+                <div class="q-info">
+                  <div class="q-text">{{ po.content[:60] }}...</div>
+                  <div class="q-meta">{{ po.status }} • {{ po.published_at }}</div>
+                </div>
+                <div class="q-badge {{ 'soon' if po.status == 'pending' else 'later' }}">{{ po.status }}</div>
+              </div>
+              {% else %}
+              <div style="font-size: 12px; color: var(--ink4)">No tasks in queue.</div>
+              {% endfor %}
+            </div>
           </div>
-          <div class="plat-stats">
-            <div class="plat-stat-num">{{ stats.x_queue }}</div>
-            <div class="plat-stat-lbl">In Queue</div>
+
+          <!-- RIGHT PANEL -->
+          <div class="right-panel">
+            
+            <!-- PERSONALITY SELECTOR -->
+            <div class="personality-banner">
+              <div class="pb-head">
+                <div class="pb-icon">🧠</div>
+                <div>
+                  <div class="pb-title">Bot Personality mood</div>
+                  <div class="pb-sub">Select the AI's current mood state</div>
+                </div>
+              </div>
+              
+              <input type="hidden" id="hdn-personality" value="random">
+              <div class="mode-row">
+                <div class="mode-item active" data-mode="random" data-mode-value="random">
+                  <div class="mode-emoji">🎲</div>
+                  <div class="mode-name">Auto-Pilot</div>
+                </div>
+                <div class="mode-item" data-mode="visionary" data-mode-value="visionary">
+                  <div class="mode-emoji">🚀</div>
+                  <div class="mode-name">Visionary</div>
+                </div>
+                <div class="mode-item" data-mode="analyst" data-mode-value="analyst">
+                  <div class="mode-emoji">📊</div>
+                  <div class="mode-name">Analyst</div>
+                </div>
+                <div class="mode-item" data-mode="comedian" data-mode-value="comedian">
+                  <div class="mode-emoji">🤡</div>
+                  <div class="mode-name">Comedian</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MINI STATS -->
+            <div class="mini-stats">
+              <div class="mini-stat">
+                <div class="ms-num">{{ stats.total_topics }}</div>
+                <div class="ms-lbl">Active Topics</div>
+              </div>
+              <div class="mini-stat">
+                <div class="ms-num">{{ stats.total_images }}</div>
+                <div class="ms-lbl">Saved Images</div>
+              </div>
+              <div class="mini-stat">
+                <div class="ms-num">{{ stats.leads }}</div>
+                <div class="ms-lbl">Engaged Leads</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- SOCIAL GRID (CREATE & PANELS) -->
-      <div class="social-grid">
-        
-        <!-- LEFT: CREATE TOPIC -->
+      <!-- TOPICS TAB -->
+      <div id="tab-top" class="tab-content" style="display:none">
         <div class="card">
           <div class="card-head">
-            <div class="card-title">Feed the Engine</div>
-            <button class="btn btn-sm btn-outline" id="btn-submit-topic">Save Topic</button>
+            <div class="card-title">Manage Content Topics</div>
           </div>
-          
-          <textarea id="topicInput" class="topic-input" rows="4" placeholder="What should we talk about? (e.g. 'Why micro-SaaS is better than VC funding')"></textarea>
-          
-          <!-- CONTROLS -->
-          <div class="cf-row">
-            <div class="cf-group">
-              <label>Content Flavor</label>
-              <select class="cf-select" id="flavorSelect">
-                <option value="random">🎲 Auto-Randomize</option>
-                <option value="storytime">📖 Story Time</option>
-                <option value="hottake">🔥 Hot Take</option>
-                <option value="foodthought">🍽️ Food for Thought</option>
-                <option value="ragebait">😤 Ragebait</option>
-                <option value="update">📰 Quick Update</option>
-                <option value="tips">💡 Tactical Tips</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- PLATFORM DISTRIBUTION -->
-          <label class="slabel" style="margin-top:10px">Distribute To</label>
-          <div class="plat-toggle-row">
-            <div class="plat-toggle on li" id="tog-li"><div class="plat-toggle-dot"></div> LinkedIn</div>
-            <div class="plat-toggle on xt" id="tog-xt"><div class="plat-toggle-dot"></div> X (Twitter)</div>
-          </div>
-          
-          <label class="slabel">Upcoming Queue</label>
-          <div>
-            {% for po in recent_posts %}
+          <div style="margin-top:20px">
+            {% for t in topics %}
             <div class="queue-item">
-              <div class="q-plat {{ 'li' if po.platform == 'linkedin' else 'xt' }}">
-                 {% if po.platform == 'linkedin' %}in{% else %}𝕏{% endif %}
-              </div>
               <div class="q-info">
-                <div class="q-text">{{ po.content[:60] }}...</div>
-                <div class="q-meta">{{ po.status }} • {{ po.published_at }}</div>
+                <div class="q-text" style="font-weight:600">{{ t.topic }}</div>
+                <div class="q-meta">{{ t.platform }} • {{ t.flavor }} • {{ t.personality }}</div>
               </div>
-              <div class="q-badge {{ 'soon' if po.status == 'pending' else 'later' }}">{{ po.status }}</div>
+              <div class="q-badge {{ 'soon' if t.active else 'later' }}">{{ 'Active' if t.active else 'Inactive' }}</div>
             </div>
-            {% else %}
-            <div style="font-size: 12px; color: var(--ink4)">No tasks in queue.</div>
             {% endfor %}
           </div>
         </div>
+      </div>
 
-        <!-- RIGHT PANEL -->
-        <div class="right-panel">
-          
-          <!-- PERSONALITY SELECTOR -->
-          <div class="personality-banner">
-            <div class="pb-head">
-              <div class="pb-icon">🧠</div>
-              <div>
-                <div class="pb-title">Bot Personality</div>
-                <div class="pb-sub">Select the AI's current mood state</div>
-              </div>
-            </div>
-            
-            <input type="hidden" id="hdn-personality" value="random">
-            <div class="mode-row">
-              <div class="mode-item active" data-mode="random" data-mode-value="random">
-                <div class="mode-emoji">🎲</div>
-                <div class="mode-name">Auto-Pilot</div>
-                <div class="mode-desc">Let AI decide</div>
-              </div>
-              <div class="mode-item" data-mode="prof" data-mode-value="professional">
-                <div class="mode-emoji">💼</div>
-                <div class="mode-name">Professional</div>
-                <div class="mode-desc">Clean, structured inputs</div>
-              </div>
-              <div class="mode-item" data-mode="chaos" data-mode-value="chaotic">
-                <div class="mode-emoji">🌪️</div>
-                <div class="mode-name">Chaotic</div>
-                <div class="mode-desc">Provocative hooks</div>
-              </div>
-              <div class="mode-item" data-mode="chill" data-mode-value="chill">
-                <div class="mode-emoji">🛋️</div>
-                <div class="mode-name">Chill</div>
-                <div class="mode-desc">Imperfect, friendly</div>
-              </div>
-            </div>
+      <!-- IMAGE LIBRARY TAB -->
+      <div id="tab-img" class="tab-content" style="display:none">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Visual Arsenal</div>
+            <button class="btn btn-sm btn-primary" data-open="modal-image">Upload New</button>
           </div>
-
-          <!-- MINI STATS -->
-          <div class="mini-stats">
-            <div class="mini-stat">
-              <div class="ms-num">{{ stats.total_topics }}</div>
-              <div class="ms-lbl">Active Topics</div>
+          <div class="img-lib-grid" style="margin-top:20px">
+            {% for img in images %}
+            <div class="lib-img" style="height:150px">
+              <img src="/static/uploads/{{ img.filename }}" style="width:100%; height:100%; object-fit:cover; border-radius: 6px;">
+              <div class="lib-tag-label">{{ img.tag }}</div>
             </div>
-            <div class="mini-stat">
-              <div class="ms-num">{{ stats.total_images }}</div>
-              <div class="ms-lbl">Saved Images</div>
-            </div>
-            <div class="mini-stat">
-              <div class="ms-num">{{ stats.leads }}</div>
-              <div class="ms-lbl">Engaged Leads</div>
-            </div>
-            <div class="mini-stat">
-              <div class="ms-num">₹/€/$</div>
-              <div class="ms-lbl">0.00 Spent</div>
-            </div>
+            {% endfor %}
           </div>
-
-          <!-- RECENT IMAGES -->
-          <div class="card" style="flex:1">
-            <div class="card-head">
-              <div class="card-title">Image Arsenal</div>
-              <button class="btn btn-sm btn-outline" data-open="modal-image">Add</button>
-            </div>
-            <div class="img-lib-grid">
-              {% for img in images[:5] %}
-              <div class="lib-img">
-                <img src="/static/uploads/{{ img.filename }}" style="width:100%; height:100%; object-fit:cover; border-radius: 6px;">
-                <div class="lib-tag-label">{{ img.tag }}</div>
-                <div class="sel-chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
-              </div>
-              {% endfor %}
-              <div class="lib-img lib-img-add" data-open="modal-image">+</div>
-            </div>
-            <div class="lib-hint">Images are automatically paired based on flavor and platform.</div>
-          </div>
-          
         </div>
       </div>
       
