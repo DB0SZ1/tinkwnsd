@@ -18,7 +18,7 @@ from utils.config import settings
 
 # Ensure the connection string uses the psycopg (v3) driver.
 # If the user has "postgresql://" in .env, replace with "postgresql+psycopg://".
-_db_url = settings.DATABASE_URL
+_db_url = settings.DATABASE_URL or "sqlite:///./automation.db"
 if _db_url.startswith("postgresql://"):
     _db_url = _db_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
