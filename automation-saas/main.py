@@ -110,7 +110,7 @@ if settings.HTML.lower() == "true":
     @app.post("/login")
     async def login_submit(password: str = Form(...)):
         if password == settings.ADMIN_API_KEY:
-            response = RedirectResponse(url="/", status_code=302)
+            response = RedirectResponse(url="/?success=1", status_code=302)
             response.set_cookie(key="session_token", value=settings.ADMIN_API_KEY, httponly=True)
             return response
         return RedirectResponse(url="/login?error=Invalid Credentials", status_code=302)

@@ -8,3 +8,6 @@ venv/
 *.egg-info/
 dist/
 build/
+linkedin_oauth_helper.py
+*.db
+backup.json

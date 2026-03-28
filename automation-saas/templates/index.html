@@ -13,6 +13,7 @@
 <body>
 
 <div class="backdrop" id="backdrop"></div>
+<div id="toast-container" class="toast-container"></div>
 
 <div class="shell">
   <!-- SIDEBAR -->
@@ -391,6 +392,19 @@
   </div>
 </div>
 
+<script>
+  // Check for login success
+  window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success')) {
+      if (window.showToast) {
+        showToast('Welcome back, Admin! Access granted.', 'success');
+      }
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  });
+</script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

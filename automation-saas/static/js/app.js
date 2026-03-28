@@ -1,4 +1,19 @@
 (function(){
+  // Global Toast System
+  window.showToast = function(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-content">${type === 'success' ? '✔️' : '❌'} ${message}</div>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  };
+
   // SIDEBAR
   var sidebar = document.getElementById('sidebar');
   var backdrop = document.getElementById('backdrop');
@@ -153,11 +168,11 @@
                   })
               });
               if(res.ok) {
-                  btn.innerHTML = 'Added ✔️';
+                  showToast('Topic added to the engine!');
                   document.getElementById('topicInput').value = '';
                   setTimeout(() => location.reload(), 800);
               } else {
-                  btn.innerHTML = 'Error';
+                  showToast('Failed to save topic.', 'error');
                   setTimeout(() => btn.innerHTML = originalText, 2000);
               }
           } catch(e) {
@@ -198,10 +213,10 @@
                   body: formData
               });
               if(res.ok) {
-                  this.innerHTML = 'Done ✔️';
+                  showToast('Image uploaded and categorized!');
                   setTimeout(() => location.reload(), 800);
               } else {
-                  this.innerHTML = 'Error';
+                  showToast('Upload failed.', 'error');
                   setTimeout(() => this.innerHTML = originalText, 2000);
               }
           } catch(e) {
@@ -248,11 +263,11 @@
                   })
               });
               if(res.ok) {
-                  this.innerHTML = 'Saved ✔️';
+                  showToast('Settings updated successfully!');
                   setTimeout(() => closeModal('modal-settings'), 800);
                   setTimeout(() => this.innerHTML = originalText, 1000);
               } else {
-                  this.innerHTML = 'Error';
+                  showToast('Could not save settings.', 'error');
                   setTimeout(() => this.innerHTML = originalText, 2000);
               }
           } catch(e) {

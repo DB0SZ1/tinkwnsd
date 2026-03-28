@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -89,6 +90,7 @@
 </head>
 <body>
 
+<div id="toast-container" class="toast-container"></div>
 <div class="login-box">
   <div class="logo-mark">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -96,9 +98,7 @@
   <h1>Welcome Back</h1>
   <p>Enter your admin credentials to access the engine.</p>
   
-  {% if error %}
-  <div class="error-msg">{{ error }}</div>
-  {% endif %}
+  <!-- Toast logic handles this now -->
 
   <form method="POST" action="/login">
     <div class="form-group">
@@ -109,5 +109,22 @@
   </form>
 </div>
 
+  <script>
+    function showToast(message, type = 'error') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<div class="toast-content">${type === 'success' ? '✔️' : '❌'} ${message}</div>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+    {% if error %}
+      showToast("{{ error }}", 'error');
+    {% endif %}
+  </script>
 </body>
 </html>
