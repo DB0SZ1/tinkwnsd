@@ -110,8 +110,14 @@ if settings.HTML.lower() == "true":
     @app.post("/login")
     async def login_submit(password: str = Form(...)):
         if password == settings.ADMIN_API_KEY:
-            response = RedirectResponse(url="/?success=1", status_code=302)
-            response.set_cookie(key="session_token", value=settings.ADMIN_API_KEY, httponly=True)
+            response = RedirectResponse(url="/?success=1", status_code=303)
+            response.set_cookie(
+                key="session_token", 
+                value=settings.ADMIN_API_KEY, 
+                httponly=True,
+                samesite="lax",
+                path="/"
+            )
             return response
         return RedirectResponse(url="/login?error=Invalid Credentials", status_code=302)
 
@@ -126,7 +132,7 @@ if settings.HTML.lower() == "true":
         try:
             await get_current_user(request)
         except HTTPException:
-            return RedirectResponse(url="/login")
+            return RedirectResponse(url="/login", status_code=302)
             
         topics = db.query(Topic).filter(Topic.active == True).all()
         recent_posts = db.query(Post).order_by(Post.id.desc()).limit(10).all()
