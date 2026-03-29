@@ -105,7 +105,7 @@ if settings.HTML.lower() == "true":
 
     @app.get("/login", response_class=HTMLResponse)
     async def login_page(request: Request, error: str = None):
-        return templates.TemplateResponse("login.html", {"request": request, "error": error})
+        return templates.TemplateResponse(request, "login.html", {"error": error})
 
     @app.post("/login")
     async def login_submit(password: str = Form(...)):
@@ -148,8 +148,7 @@ if settings.HTML.lower() == "true":
             "leads": db.query(Lead).count()
         }
         
-        return templates.TemplateResponse("index.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "index.html", {
             "topics": user_topics,
             "automated_topics": automated_topics,
             "recent_posts": recent_posts,

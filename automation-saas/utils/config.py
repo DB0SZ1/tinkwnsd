@@ -72,9 +72,14 @@ class Settings:
 
         for f in fields(cls):
             val = os.getenv(f.name)
+            # If field has a default value, it's optional
+            import dataclasses
+            has_default = not isinstance(f.default, dataclasses._MISSING_TYPE)
+            
             if val is None or val == "":
-                missing.append(f.name)
-                values[f.name] = ""
+                if not has_default:
+                    missing.append(f.name)
+                values[f.name] = f.default if has_default else ""
             else:
                 # Clean up whitespace/newlines which cause auth failures
                 values[f.name] = val.strip().strip('"').strip("'")
@@ -83,7 +88,7 @@ class Settings:
             # Log a warning but don't crash — some modules may not be used
             import logging
             logging.warning(
-                "Missing environment variables (some modules may not work): %s",
+                "Missing REQUIRED environment variables: %s",
                 ", ".join(missing),
             )
 
