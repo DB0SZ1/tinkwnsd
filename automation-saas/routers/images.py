@@ -14,6 +14,7 @@ router = APIRouter(prefix="/images", tags=["Images"])
 async def upload_image(
     file: UploadFile = File(...),
     tag: str = Form(...),
+    description: str = Form(None),
     db: Session = Depends(get_db),
     _: bool = Depends(get_current_user)
 ):
@@ -25,10 +26,12 @@ async def upload_image(
     if settings.HTML.lower() == "true":
         # Also copy to static/uploads for UI serving if HTML UI is enabled
         file_path_ui = os.path.join("static/uploads", filename)
-        if os.path.exists("static/uploads"):
-            shutil.copyfile(file_path, file_path_ui)
+        if not os.path.exists("static/uploads"):
+            os.makedirs("static/uploads", exist_ok=True)
+        shutil.copyfile(file_path, file_path_ui)
         
-    img = ImageLibrary(filename=filename, tag=tag)
+    img = ImageLibrary(filename=filename, tag=tag, description=description)
     db.add(img)
     db.commit()
-    return {"status": "ok", "filename": filename}
+    db.refresh(img)
+    return {"status": "ok", "filename": filename, "id": img.id}

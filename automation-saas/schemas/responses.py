@@ -1,18 +1,20 @@
 from typing import Optional
 from pydantic import BaseModel
+import uuid
 
 class TopicResponse(BaseModel):
-    id: str
+    id: int
     topic: str
     platform: str
-    tone: str
+    flavor: str
+    personality: str
     active: bool
 
     class Config:
         from_attributes = True
 
 class PostResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     platform: str
     content: str
     post_id: Optional[str] = None
@@ -23,7 +25,7 @@ class PostResponse(BaseModel):
         from_attributes = True
 
 class LeadResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     name: Optional[str] = None
     profile_url: Optional[str] = None
     platform: str

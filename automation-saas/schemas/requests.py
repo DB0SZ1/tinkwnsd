@@ -22,6 +22,8 @@ class SettingsUpdate(BaseModel):
     database_url: Optional[str] = None
     admin_api_key: Optional[str] = None
     timezone: Optional[str] = None
+    topics_engine: Optional[str] = None
+    woeid: Optional[str] = None
 
 class PublishRequest(BaseModel):
     platform: str = "both"  # "x" | "linkedin" | "both"

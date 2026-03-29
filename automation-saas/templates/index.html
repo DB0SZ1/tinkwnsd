@@ -276,6 +276,46 @@
 <!-- MODALS -->
 <!-- ============================================== -->
 
+<!-- CREATE TOPIC MODAL -->
+<div class="modal-overlay" id="modal-create">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">New Content Topic</div>
+      <button class="modal-x" data-close="modal-create"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-g">
+        <label class="form-lbl">What's the topic?</label>
+        <textarea id="modalTopicInput" class="topic-input" rows="3" placeholder="e.g. 'How to build SaaS fast'"></textarea>
+      </div>
+      
+      <div class="cf-row">
+        <div class="cf-group">
+          <label>Content Flavor</label>
+          <select class="cf-select" id="modalFlavorSelect">
+            <option value="random">🎲 Auto-Randomize</option>
+            <option value="storytime">📖 Story Time</option>
+            <option value="hottake">🔥 Hot Take</option>
+            <option value="foodthought">🍽️ Food for Thought</option>
+            <option value="ragebait">😤 Ragebait</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="slabel">Platforms</label>
+      <div class="plat-toggle-row">
+        <div class="plat-toggle on li" id="modal-tog-li"><div class="plat-toggle-dot"></div> LinkedIn</div>
+        <div class="plat-toggle on xt" id="modal-tog-xt"><div class="plat-toggle-dot"></div> X (Twitter)</div>
+      </div>
+
+      <div class="modal-ft">
+        <button class="btn btn-outline" data-close="modal-create">Discard</button>
+        <button class="btn btn-primary" id="btn-modal-submit-topic">Save to Engine</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="modal-settings">
   <div class="modal">

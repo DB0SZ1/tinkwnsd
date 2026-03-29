@@ -97,6 +97,8 @@ class ImageLibrary(Base):
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, unique=True, index=True)
     tag = Column(String, index=True) # 'personal', 'headshot', 'infographic', 'meme', 'quote'
+    description = Column(Text, nullable=True) # Detailed AI-friendly description
+    cloudinary_url = Column(String, nullable=True) # Remote URL if hosted on Cloudinary
     platform_bias = Column(String, default="both") # 'x', 'linkedin', 'both'
     uploaded_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 

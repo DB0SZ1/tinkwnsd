@@ -1,10 +1,31 @@
 import os
 import re
 from fastapi import APIRouter, Depends
+from utils.config import settings
 from core.security import get_current_user
 from schemas.requests import SettingsUpdate
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
+
+@router.get("")
+async def get_settings(_: str = Depends(get_current_user)):
+    """Fetch current settings from .env (partially masked for safety)."""
+    
+    def mask(val: str, key: str) -> str:
+        if not val: return ""
+        # Mask anything with KEY, SECRET, TOKEN, PASS in the name
+        sensitive_terms = ["KEY", "SECRET", "TOKEN", "PASS"]
+        if any(term in key.upper() for term in sensitive_terms):
+            if len(val) <= 8: return "****"
+            return val[:8] + "...XXXX"
+        return val
+
+    # Convert settings dataclass to dict and mask
+    from dataclasses import asdict
+    raw_data = asdict(settings)
+    masked_data = {k: mask(v, k) for k, v in raw_data.items()}
+    
+    return masked_data
 
 @router.post("")
 async def update_settings(body: SettingsUpdate, _: bool = Depends(get_current_user)):
@@ -32,6 +53,8 @@ async def update_settings(body: SettingsUpdate, _: bool = Depends(get_current_us
         "DATABASE_URL": body.database_url,
         "ADMIN_API_KEY": body.admin_api_key,
         "TIMEZONE": body.timezone,
+        "TOPICS_ENGINE": body.topics_engine,
+        "WOEID": body.woeid,
     }
 
     for key, val in fields_map.items():

@@ -47,3 +47,17 @@ async def toggle_topic(
     db.refresh(topic)
     logger.info("Toggled topic %s → active=%s", topic.id, topic.active)
     return topic
+@router.delete("/{topic_id}")
+async def delete_topic(
+    topic_id: int,
+    db: Session = Depends(get_db),
+    _: str = Depends(verify_api_key),
+):
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    db.delete(topic)
+    db.commit()
+    logger.info("Deleted topic: %s", topic_id)
+    return {"status": "ok", "message": f"Topic {topic_id} deleted"}

@@ -55,12 +55,45 @@
       var o=document.getElementById(id); 
       if(!o) return; 
       o.style.display='flex'; 
+      if(id === 'modal-settings') fetchSettings();
       requestAnimationFrame(function(){ 
           requestAnimationFrame(function(){ 
               o.classList.add('open'); 
           }); 
       }); 
   }
+
+  async function fetchSettings() {
+    try {
+        let res = await fetch('/api/v1/settings');
+        if(!res.ok) return;
+        let d = await res.json();
+        
+        // Map backend keys to modal input IDs
+        const map = {
+            "OPENROUTER_API_KEY": "set-or-key",
+            "OPENROUTER_MODEL": "set-or-model",
+            "X_API_KEY": "set-x-key",
+            "X_API_SECRET": "set-x-secret",
+            "X_ACCESS_TOKEN": "set-x-token",
+            "X_ACCESS_TOKEN_SECRET": "set-x-token-secret",
+            "X_USERNAME": "set-x-user",
+            "X_EMAIL": "set-x-email",
+            "X_PASSWORD": "set-x-pass",
+            "LINKEDIN_ACCESS_TOKEN": "set-li-token",
+            "LINKEDIN_PERSON_ID": "set-li-urn",
+            "DATABASE_URL": "set-db",
+            "ADMIN_API_KEY": "set-admin-key",
+            "TIMEZONE": "set-tz"
+        };
+        
+        for(let key in map) {
+            let el = document.getElementById(map[key]);
+            if(el) el.value = d[key] || "";
+        }
+    } catch(e) {}
+  }
+  
   function closeModal(id){ 
       var o=document.getElementById(id); 
       if(!o) return; 
@@ -74,7 +107,10 @@
       el.addEventListener('click', function(){ openModal(el.getAttribute('data-open')); }); 
   });
   document.querySelectorAll('[data-close]').forEach(function(el){ 
-      el.addEventListener('click', function(){ closeModal(el.getAttribute('data-close')); }); 
+      el.addEventListener('click', function(e){ 
+          e.stopPropagation();
+          closeModal(el.getAttribute('data-close')); 
+      }); 
   });
   document.querySelectorAll('.modal-overlay').forEach(function(o){ 
       o.addEventListener('click', function(e){ if(e.target===o) closeModal(o.id); }); 
@@ -86,10 +122,17 @@
   });
 
   // PLATFORM TOGGLES (Distribute To tags)
+  // Dashboard
   var togLi = document.getElementById('tog-li');
   var togXt = document.getElementById('tog-xt');
   if(togLi) togLi.addEventListener('click', function(){ this.classList.toggle('on'); });
   if(togXt) togXt.addEventListener('click', function(){ this.classList.toggle('on'); });
+  
+  // Modal
+  var mtogLi = document.getElementById('modal-tog-li');
+  var mtogXt = document.getElementById('modal-tog-xt');
+  if(mtogLi) mtogLi.addEventListener('click', function(){ this.classList.toggle('on'); });
+  if(mtogXt) mtogXt.addEventListener('click', function(){ this.classList.toggle('on'); });
 
   // PLATFORM PUBLISHING ON/OFF BUTTONS
   document.querySelectorAll('.platform-card').forEach(function(card){
@@ -134,13 +177,45 @@
     });
   });
 
-  // Topic Submission
+  // Topic Submission Logic
+  async function submitTopicData(topic, platform, flavor, personality, btn) {
+      if(!topic) {
+          showToast('Please enter a topic!', 'error');
+          return;
+      }
+      
+      var originalText = btn.innerHTML;
+      btn.innerHTML = 'Saving...';
+
+      try {
+          let res = await fetch('/api/v1/topics', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                  topic: topic,
+                  platform: platform,
+                  flavor: flavor,
+                  personality: personality
+              })
+          });
+          if(res.ok) {
+              showToast('Topic added to the engine!');
+              setTimeout(() => location.reload(), 800);
+          } else {
+              showToast('Failed to save topic.', 'error');
+              setTimeout(() => btn.innerHTML = originalText, 2000);
+          }
+      } catch(e) {
+          showToast('Network error.', 'error');
+          setTimeout(() => btn.innerHTML = originalText, 2000);
+      }
+  }
+
+  // Dashboard Submission
   var submitTopic = document.getElementById('btn-submit-topic');
   if(submitTopic) {
-      submitTopic.addEventListener('click', async function(){
+      submitTopic.addEventListener('click', function(){
           var topic = document.getElementById('topicInput').value;
-          if(!topic) return;
-
           var flavor = document.getElementById('flavorSelect').value || "random";
           var personality = document.getElementById('hdn-personality').value;
           
@@ -150,35 +225,35 @@
           var platform = "both";
           if (isLi && !isXt) platform = "linkedin";
           if (!isLi && isXt) platform = "x";
-          if (!isLi && !isXt) return; // Need at least one
-
-          var btn = this;
-          var originalText = btn.innerHTML;
-          btn.innerHTML = 'Saving...';
-
-          try {
-              let res = await fetch('/api/v1/topics', {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({
-                      topic: topic,
-                      platform: platform,
-                      flavor: flavor,
-                      personality: personality
-                  })
-              });
-              if(res.ok) {
-                  showToast('Topic added to the engine!');
-                  document.getElementById('topicInput').value = '';
-                  setTimeout(() => location.reload(), 800);
-              } else {
-                  showToast('Failed to save topic.', 'error');
-                  setTimeout(() => btn.innerHTML = originalText, 2000);
-              }
-          } catch(e) {
-              btn.innerHTML = 'Error';
-              setTimeout(() => btn.innerHTML = originalText, 2000);
+          if (!isLi && !isXt) {
+              showToast('Select a platform!', 'error');
+              return;
           }
+
+          submitTopicData(topic, platform, flavor, personality, this);
+      });
+  }
+
+  // Modal Submission
+  var modalSubmitTopic = document.getElementById('btn-modal-submit-topic');
+  if(modalSubmitTopic) {
+      modalSubmitTopic.addEventListener('click', function(){
+          var topic = document.getElementById('modalTopicInput').value;
+          var flavor = document.getElementById('modalFlavorSelect').value || "random";
+          var personality = document.getElementById('hdn-personality').value; // Share singleton
+          
+          var isLi = document.getElementById('modal-tog-li').classList.contains('on');
+          var isXt = document.getElementById('modal-tog-xt').classList.contains('on');
+          
+          var platform = "both";
+          if (isLi && !isXt) platform = "linkedin";
+          if (!isLi && isXt) platform = "x";
+          if (!isLi && !isXt) {
+              showToast('Select a platform!', 'error');
+              return;
+          }
+
+          submitTopicData(topic, platform, flavor, personality, this);
       });
   }
 

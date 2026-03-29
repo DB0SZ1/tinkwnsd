@@ -61,6 +61,8 @@ class Settings:
 
     # Feature Flags
     HTML: str = "true"
+    TOPICS_ENGINE: str = "manual"
+    WOEID: str = "23424908" # Default to Nigeria
 
     @classmethod
     def from_env(cls) -> "Settings":

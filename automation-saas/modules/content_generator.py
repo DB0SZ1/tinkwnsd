@@ -46,83 +46,94 @@ TONE_INSTRUCTIONS = {
 
 
 
-async def generate_content(topic: str, platform: str = "x", flavor: str = "random", personality: str = "random") -> str:
+async def generate_content(
+    topic: str, 
+    platform: str = "x", 
+    flavor: str = "random", 
+    personality: str = "random",
+    context: str | None = None
+) -> str:
     """
     Generate platform-specific content using OpenRouter AI.
-    Features: Content Persona Layering, Platform Tone Calibration, Human Signals.
+    Features: Content Persona Layering, Platform Tone Calibration, Human Signals, Real-time Context.
     """
-    # Auto-randomize if 'random'
     import random
-    if flavor == "random":
-        valid_flavors = ["storytime", "hottake", "foodthought", "update", "ragebait", "tips"]
-        flavor = random.choice(valid_flavors)
-        
-    if personality == "random":
-        valid_personalities = ["visionary", "analyst", "comedian", "mentor", "skeptic", "hype-beast", "chill", "chaotic"]
+    
+    # 1. Expand Personalities (Strategic for lead gen)
+    valid_personalities = [
+        "visionary", "analyst", "comedian", "mentor", "skeptic", 
+        "hype-beast", "chill", "chaotic", "github-discoverer",
+        "10x-shipper", "work-advertiser", "trend-analyst", "lead-magnet"
+    ]
+    
+    if personality == "random" or personality not in valid_personalities:
         personality = random.choice(valid_personalities)
 
-    # 1. Platform Tone Calibration
+    if flavor == "random":
+        valid_flavors = ["storytime", "hottake", "foodthought", "update", "ragebait", "tips", "tutorial", "case-study"]
+        flavor = random.choice(valid_flavors)
+
+    # 2. Platform Tone Calibration & Human Rules
     if platform == "linkedin":
         rules = (
-            "- **Tone:** Professional but deeply human. Storytelling is mandatory. No dry corporate speak.\n"
-            "- **Format:** Use plenty of white space. 1-2 sentences per paragraph.\n"
-            "- **Engagement:** End with a question that feels like a conversation starter, not a marketing survey."
+            "- **Tone:** Professional but DEEPLY human and approachable. Storytelling is key.\n"
+            "- **Goal:** Establish authority, share value, and attract leads/jobs.\n"
+            "- **Emojis:** Use emojis to break up text and add personality (1-3 per post), but keep it professional.\n"
+            "- **Format:** Use whitespace. No walls of text. 1-2 sentences per paragraph.\n"
+            "- **Engagement:** End with a thought-provoking question or a soft call-to-action."
         )
     elif platform == "x":
         rules = (
-            "- **Tone:** High signal-to-noise. Be punchy. Use lowercase for casual vibes if appropriate.\n"
-            "- **Constraints:** Strictly under 280 characters.\n"
-            "- **Vibe:** Sharp, witty, and immediate."
+            "- **Tone:** High signal, punchy, and conversational. Sound like a real person, not an AI.\n"
+            "- **Emojis:** Use emojis naturally (essential for human vibe). Keep it short and witty.\n"
+            "- **Constraints:** Strictly under 280 characters. Hook them in the first 40 chars.\n"
+            "- **Vibe:** Sharp, current, and slightly informal (lowercase is fine if it fits the vibe)."
         )
     else: 
-        rules = "- **Tone:** Balanced. Engaging and clear."
+        rules = "- **Tone:** Balanced and engaging."
 
-    # 2. Personality Depth & Human Signals
-    if personality == "visionary":
-        rules += "\n- **Persona:** You see the future. Talk about 'what's next' and 'the big picture'. Be inspiring and slightly idealistic."
-        rules += "\n- **Human Signals:** Use words like 'imagine', 'possibility', 'tomorrow'. Avoid jargon."
-    elif personality == "analyst":
-        rules += "\n- **Persona:** You are skeptical and data-obsessed. Break things down. Be precise and realistic."
-        rules += "\n- **Human Signals:** Use phrases like 'the reality is', 'the math doesn't add up', 'here is the actual breakdown'."
-    elif personality == "comedian":
-        rules += "\n- **Persona:** You don't take anything seriously. Use irony, self-deprecation, and wit."
-        rules += "\n- **Human Signals:** Use 'tbh', 'lol', or dry observations about how ridiculous things are."
-    elif personality == "mentor":
-        rules += "\n- **Persona:** You want to help. Share lessons, avoid ego, be warm and encouraging."
-        rules += "\n- **Human Signals:** Use 'I wish I knew this earlier', 'Here is a small tip', 'You've got this'."
-    elif personality == "skeptic":
-        rules += "\n- **Persona:** You are the contrarian. Challenge the status quo. Be respectfully blunt."
-        rules += "\n- **Human Signals:** Use 'Is it just me or...', 'Unpopular opinion:', 'We need to stop pretending that...'."
-    elif personality == "hype-beast":
-        rules += "\n- **Persona:** High energy. Everything is amazing. Be the ultimate cheerleader."
-        rules += "\n- **Human Signals:** Use all-caps for emphasis occasionally. Use '!'. Be very promotional but authentic."
-    elif personality == "chaotic":
-        rules += "\n- **Persona:** Mischievous and unpredictable. Break the fourth wall. Be slightly weird."
-        rules += "\n- **Human Signals:** Start mid-thought. Use chaotic formatting. Be unapologetically you."
-    elif personality == "chill":
-        rules += "\n- **Persona:** Relaxed, low-stakes, effortlessly cool. Like a Sunday morning coffee chat."
-        rules += "\n- **Human Signals:** Use soft openers like 'just thinking about...', 'honestly...', 'no pressure but...'."
+    # 3. Strategic Persona Depth
+    persona_instructions = {
+        "visionary": "You see the future. Talk about 'what's next'. Be inspiring.",
+        "analyst": "Skeptical and data-obsessed. Break things down with precision.",
+        "comedian": "Witty, ironic, and self-deprecating. Don't take it too seriously.",
+        "mentor": "Warm and encouraging. Share lessons from failures to help others.",
+        "skeptic": "Contrarian. Challenge the status quo with logic and bluntness.",
+        "hype-beast": "High energy cheerleader. Everything is amazing and transformative.",
+        "chaotic": "Unpredictable. Break the fourth wall. Start mid-thought.",
+        "chill": "Relaxed Sunday morning coffee chat vibes. Effortlessly cool.",
+        "github-discoverer": "Technical scout. Share amazing repos, libraries, or tools and explain their impact 10x.",
+        "10x-shipper": "Efficiency obsessive. Share tips on shipping fast, coding clean, and high-output workflows.",
+        "work-advertiser": "The subtle pro. Share a case study or a 'build in public' update that showcases skills.",
+        "trend-analyst": "The news-breaker. Take recent tech trends and explain what they actually mean for devs.",
+        "lead-magnet": "Problem solver. Identify a common pain point and offer a high-value solution or perspective."
+    }
+    
+    rules += f"\n- **Persona ({personality}):** {persona_instructions.get(personality, 'Be engaging.')}"
 
-    # Combine into system prompt
+    # 4. Contextual Injection
+    real_time_info = ""
+    if context:
+        real_time_info = f"\n\n# REAL-TIME CONTEXT (Use this to make the post current):\n{context}"
+
+    # 5. Final Prompt Construction
     system_prompt = f"""You are a top-tier social media content creator writing for an automated bot persona.
-Do NOT sound like a robot, AI assistant, or marketer.
+Do NOT sound like a robot, AI assistant, or lifeless marketer. Use a human, relatable voice.
 Write a post for {platform.upper()}.
 
 # Setup
 - Topic: {topic}
-- Flavor: {flavor.upper()} (Wrap the topic in this style)
-- Personality: {personality.upper()}
+- Style/Flavor: {flavor.upper()}
+- Persona: {personality.upper()}
 
 # Platform & Human Rules
 {rules}
+{real_time_info}
 
 # Output format
-Return ONLY the raw post content. No preambles, no quotes around the text, no hashtags unless naturally fitting. Just the text to be published."""
+Return ONLY the raw post content. No preambles, no quotes, no 'Here is your post'. Just the text."""
 
-    logger.debug(
-        "Generating %s content for topic: '%s' (flavor: %s, mode: %s)",
-        platform, topic, flavor, personality
-    )
+    logger.debug("Generating %s content for topic: %s (Persona: %s)", platform, topic, personality)
 
     try:
         async for attempt in AsyncRetrying(
@@ -133,7 +144,7 @@ Return ONLY the raw post content. No preambles, no quotes around the text, no ha
             with attempt:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     resp = await client.post(
-                        "https://openrouter.ai/api/v1/chat/completions",
+                        OPENROUTER_URL,
                         headers={
                             "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
                             "Content-Type": "application/json",
@@ -142,9 +153,9 @@ Return ONLY the raw post content. No preambles, no quotes around the text, no ha
                             "model": settings.OPENROUTER_MODEL,
                             "messages": [
                                 {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": f"Write the post about: {topic}"},
+                                {"role": "user", "content": f"Write the {platform} post about: {topic}"},
                             ],
-                            "temperature": 0.75, # slightly higher for creativity
+                            "temperature": 0.8,
                         },
                     )
                     resp.raise_for_status()
@@ -152,7 +163,7 @@ Return ONLY the raw post content. No preambles, no quotes around the text, no ha
 
                     if "choices" in data and len(data["choices"]) > 0:
                         content = data["choices"][0]["message"]["content"].strip()
-                        # Final safety clamp for X
+                        # Safety clamp for X
                         if platform == "x" and len(content) > 280:
                             content = content[:277] + "..."
                         return content
@@ -161,4 +172,4 @@ Return ONLY the raw post content. No preambles, no quotes around the text, no ha
 
     except Exception as exc:
         logger.error("Content generation failed: %s", exc)
-        return f"Could not generate post about {topic[:20]}..."
+        return f"Just thinking about {topic}... 🚀 #TechTalk"
