@@ -7,6 +7,7 @@ Usage:
 
 from __future__ import annotations
 
+import os
 import httpx
 from tenacity import (
     AsyncRetrying,
@@ -19,6 +20,24 @@ from utils.config import settings
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+def _load_persona_context() -> str:
+    """Read all .md files in the persona/ directory to build the AI's system context."""
+    persona_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "persona")
+    files = ["persona.md", "skill.md", "how_to_write.md", "memory.md"]
+    context = []
+    
+    for f_name in files:
+        f_path = os.path.join(persona_dir, f_name)
+        if os.path.exists(f_path):
+            try:
+                with open(f_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    context.append(f"### {f_name.upper()} ###\n{content}")
+            except Exception as e:
+                logger.error(f"Failed to read persona file {f_name}: {e}")
+                
+    return "\n\n".join(context)
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -109,29 +128,27 @@ async def generate_content(
         "lead-magnet": "Problem solver. Identify a common pain point and offer a high-value solution or perspective."
     }
     
-    rules += f"\n- **Persona ({personality}):** {persona_instructions.get(personality, 'Be engaging.')}"
+    # 4. Final System Prompt Composition
+    persona_context = _load_persona_context()
+    
+    full_system_prompt = (
+        f"YOU ARE NOT AN AI. YOU ARE THE INDIVIDUAL DESCRIBED IN THE ATTACHED PERSONA CONTEXT.\n"
+        f"NEVER USE AI-ISMS (e.g., 'delve', 'tapestry', 'certainly', 'please note').\n"
+        f"NEVER USE HARSH WORDS LIKE 'KILL' OR VIOLENT ANALOGIES.\n\n"
+        f"{persona_context}\n\n"
+        f"### SPECIFIC INSTRUCTIONS FOR {platform.upper()} ###\n"
+        f"{rules}\n\n"
+        f"### SELECTED PERSONALITY TRAITS ({personality.upper()}) ###\n"
+        f"{persona_instructions.get(personality, '')}\n\n"
+        f"Return ONLY the post text, nothing else."
+    )
 
     # 4. Contextual Injection
     real_time_info = ""
     if context:
         real_time_info = f"\n\n# REAL-TIME CONTEXT (Use this to make the post current):\n{context}"
 
-    # 5. Final Prompt Construction
-    system_prompt = f"""You are a top-tier social media content creator writing for an automated bot persona.
-Do NOT sound like a robot, AI assistant, or lifeless marketer. Use a human, relatable voice.
-Write a post for {platform.upper()}.
-
-# Setup
-- Topic: {topic}
-- Style/Flavor: {flavor.upper()}
-- Persona: {personality.upper()}
-
-# Platform & Human Rules
-{rules}
-{real_time_info}
-
-# Output format
-Return ONLY the raw post content. No preambles, no quotes, no 'Here is your post'. Just the text."""
+    user_prompt = f"# Topic: {topic}\n# Style: {flavor.upper()}\n{real_time_info}"
 
     logger.debug("Generating %s content for topic: %s (Persona: %s)", platform, topic, personality)
 
@@ -152,8 +169,8 @@ Return ONLY the raw post content. No preambles, no quotes, no 'Here is your post
                         json={
                             "model": settings.OPENROUTER_MODEL,
                             "messages": [
-                                {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": f"Write the {platform} post about: {topic}"},
+                                {"role": "system", "content": full_system_prompt},
+                                {"role": "user", "content": user_prompt},
                             ],
                             "temperature": 0.8,
                         },

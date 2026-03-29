@@ -18,7 +18,8 @@ from sqlalchemy.orm import class_mapper
 logger = logging.getLogger(__name__)
 
 if settings.CLOUDINARY_URL:
-    cloudinary.config(url=settings.CLOUDINARY_URL)
+    clean_url = settings.CLOUDINARY_URL.strip().strip('"').strip("'")
+    cloudinary.config(url=clean_url)
 
 def serialize_model(obj):
     """Serialize a SQLAlchemy model to dict."""

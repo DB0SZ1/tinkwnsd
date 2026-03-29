@@ -88,21 +88,25 @@ async def publish_to_x(text: str, db: Session, image_path: str | None = None) ->
         return post
 
     except tweepy.TooManyRequests:
-        logger.warning("X rate limit hit (429). Skipping — will not retry today.")
+        logger.warning("X rate limit hit (429). Standard Apps have lower limits. Skipping.")
         post.status = "failed"
         db.add(post)
         db.commit()
         return None
 
     except tweepy.Unauthorized:
-        logger.error("X authentication failed. Halting X publishing. Check API keys.")
+        logger.error("X authentication failed. Ensure your 'Standard App' has 'Read and Write' permissions enabled in the User authentication settings.")
         post.status = "failed"
         db.add(post)
         db.commit()
         return None
 
     except Exception as exc:
-        logger.error("X publish failed: %s", exc, exc_info=True)
+        logger.error("X publish failed with exception: %s", type(exc).__name__)
+        # If it's a Forbidden 403, it's often due to lack of Write permissions
+        if "403" in str(exc):
+            logger.error("403 Forbidden: CHECK YOUR APP PERMISSIONS. Standard Apps must have 'Read and Write' enabled.")
+        logger.error("Full traceback log: %s", exc, exc_info=True)
         post.status = "failed"
         db.add(post)
         db.commit()

@@ -8,6 +8,8 @@ from schemas.requests import PublishRequest
 from modules.content_generator import generate_content
 from modules.linkedin_publisher import publish_to_linkedin
 from modules.x_publisher import publish_to_x
+from utils.image_utils import select_best_image, download_remote_image
+import os
 
 router = APIRouter(tags=["Jobs"])
 
@@ -49,8 +51,20 @@ async def publish_now(
         if topics:
             topic = random.choice(topics)
             try:
-                text = await generate_content(topic.topic, platform="x", tone=topic.tone)
-                post = await publish_to_x(text, db)
+                text = await generate_content(topic.topic, platform="x", personality=topic.personality or "random")
+                
+                # Image matching
+                img_path = None
+                img_obj = await select_best_image(text, db)
+                if img_obj:
+                    if img_obj.cloudinary_url:
+                        img_path = await download_remote_image(img_obj.cloudinary_url)
+                    elif img_obj.filename:
+                        local_path = os.path.join("uploads", img_obj.filename)
+                        if os.path.exists(local_path):
+                            img_path = local_path
+                
+                post = await publish_to_x(text, db, image_path=img_path)
                 results["x"] = {"status": "published", "post_id": str(post.id) if post else None}
             except Exception as exc:
                 results["x"] = {"status": "failed", "error": str(exc)}
@@ -66,9 +80,23 @@ async def publish_now(
         if topics:
             topic = random.choice(topics)
             try:
-                text = await generate_content(topic.topic, platform="linkedin", tone=topic.tone)
-                post = await publish_to_linkedin(text, db)
+                text = await generate_content(topic.topic, platform="linkedin", personality=topic.personality or "random")
+                
+                # Image matching
+                img_path = None
+                img_obj = await select_best_image(text, db)
+                if img_obj:
+                    if img_obj.cloudinary_url:
+                        img_path = await download_remote_image(img_obj.cloudinary_url)
+                    elif img_obj.filename:
+                        local_path = os.path.join("uploads", img_obj.filename)
+                        if os.path.exists(local_path):
+                            img_path = local_path
+                            
+                post = await publish_to_linkedin(text, db, image_path=img_path)
                 results["linkedin"] = {"status": "published", "post_id": str(post.id) if post else None}
+            except Exception as exc:
+                results["linkedin"] = {"status": "failed", "error": str(exc)}
             except Exception as exc:
                 results["linkedin"] = {"status": "failed", "error": str(exc)}
         else:

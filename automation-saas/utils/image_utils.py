@@ -1,5 +1,7 @@
 import os
 import uuid
+import random
+import httpx
 from typing import Tuple
 from sqlalchemy.orm import Session
 from db.models import ImageLibrary

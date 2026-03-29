@@ -28,7 +28,7 @@ async def send_push_notification(title: str, message: str, priority: int = 3, ta
     tags: comma separated emojis or tag words (e.g., 'warning,skull')
     """
     headers = {
-        "Title": title,
+        "Title": title.encode('utf-8').decode('latin-1'),
         "Priority": str(priority),
     }
     if tags:
