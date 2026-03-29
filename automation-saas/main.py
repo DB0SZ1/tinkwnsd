@@ -134,21 +134,24 @@ if settings.HTML.lower() == "true":
         except HTTPException:
             return RedirectResponse(url="/login", status_code=302)
             
-        topics = db.query(Topic).filter(Topic.active == True).all()
+        user_topics = db.query(Topic).filter(Topic.active == True, Topic.is_automated == False).all()
+        automated_topics = db.query(Topic).filter(Topic.active == True, Topic.is_automated == True).all()
         recent_posts = db.query(Post).order_by(Post.id.desc()).limit(10).all()
         images = db.query(ImageLibrary).order_by(ImageLibrary.id.desc()).all()
         
         stats = {
             "li_queue": db.query(Post).filter(Post.status == "pending", Post.platform == "linkedin").count(),
             "x_queue": db.query(Post).filter(Post.status == "pending", Post.platform == "x").count(),
-            "total_topics": len(topics),
+            "total_topics": len(user_topics),
+            "total_trends": len(automated_topics),
             "total_images": len(images),
             "leads": db.query(Lead).count()
         }
         
         return templates.TemplateResponse("index.html", {
             "request": request,
-            "topics": topics,
+            "topics": user_topics,
+            "automated_topics": automated_topics,
             "recent_posts": recent_posts,
             "images": images,
             "stats": stats

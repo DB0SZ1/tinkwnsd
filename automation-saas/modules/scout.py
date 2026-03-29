@@ -8,6 +8,7 @@ import asyncio
 import random
 from twikit import Client
 from duckduckgo_search import DDGS
+# Silence the rename warning if possible, though DDGS() is the new way.
 from utils.config import settings
 from utils.logger import get_logger
 
@@ -47,15 +48,19 @@ async def get_x_trends() -> list[str]:
         logger.info(f"Successfully fetched {len(clean_trends)} X trends.")
         return clean_trends
     except Exception as e:
-        logger.error(f"Failed to fetch X trends: {e}", exc_info=True)
+        if "KEY_BYTE indices" in str(e):
+            logger.error("X scraping (twikit) blocked or interrupted. X internal indices changed.")
+        else:
+            logger.error(f"Failed to fetch X trends: {e}", exc_info=True)
         return []
 
 async def get_tech_news(query: str = "latest tech news AI software engineering github") -> list[str]:
     """Fetch latest tech news and GitHub finds using DuckDuckGo."""
     try:
         logger.info(f"Searching for news with query: {query}")
+        # The new ddgs package prefers this non-context-manager approach or just DDGS().news()
         with DDGS() as ddgs:
-            results = list(ddgs.news(query, max_results=8))
+            results = [r for r in ddgs.news(query, max_results=8)]
             news = [f"{r['title']} - {r['body'][:200]}..." for r in results]
             logger.info(f"Successfully fetched {len(news)} news items.")
             return news

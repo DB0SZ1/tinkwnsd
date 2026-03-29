@@ -105,21 +105,53 @@
       },300); 
   }
   
-  window.deleteTopic = async function(id) {
-    if(!confirm('Are you sure you want to delete this topic?')) return;
-    try {
-        let res = await fetch(`/api/v1/topics/${id}`, { method: 'DELETE' });
-        if(res.ok) {
-            showToast('Topic deleted.');
-            var el = document.querySelector(`[data-topic-id="${id}"]`);
-            if(el) el.remove();
-        } else {
-            showToast('Delete failed.', 'error');
-        }
-    } catch(e) {
-        showToast('Network error.', 'error');
-    }
+  // DELETE TOPIC (OLD confirm replaced by Modal)
+  window.deleteTopic = function(id) {
+    var modal = document.getElementById('modal-delete-confirm');
+    var hdnId = document.getElementById('hdn-delete-id');
+    if(!modal || !hdnId) return;
+    
+    hdnId.value = id;
+    openModal('modal-delete-confirm');
   };
+
+  // CONFIRM DELETE ACTION
+  var btnConfirmDelete = document.getElementById('btn-confirm-delete');
+  if(btnConfirmDelete) {
+    btnConfirmDelete.addEventListener('click', async function() {
+        var id = document.getElementById('hdn-delete-id').value;
+        var originalHtml = this.innerHTML;
+        this.innerHTML = '<span class="loading-spin">🔄</span> Deleting...';
+        this.disabled = true;
+
+        try {
+            let res = await fetch(`/api/v1/topics/${id}`, { method: 'DELETE' });
+            if(res.ok) {
+                showToast('Topic permanently removed.');
+                closeModal('modal-delete-confirm');
+                var el = document.querySelector(`[data-topic-id="${id}"]`);
+                if(el) el.remove();
+                // If it's a trend, refresh the trends count badge
+                setTimeout(() => location.reload(), 500); 
+            } else {
+                showToast('Delete failed.', 'error');
+            }
+        } catch(e) {
+            showToast('Network error.', 'error');
+        } finally {
+            this.innerHTML = originalHtml;
+            this.disabled = false;
+        }
+    });
+  }
+
+  // Delegated Delete Listener for data attributes
+  document.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-delete-topic-id]');
+      if(btn) {
+          deleteTopic(btn.getAttribute('data-delete-topic-id'));
+      }
+  });
 
   // MANUAL ENGINE SCOUT
   var btnScout = document.getElementById('btn-scout-trends');
