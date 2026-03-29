@@ -109,7 +109,7 @@ if settings.HTML.lower() == "true":
 
     @app.post("/login")
     async def login_submit(password: str = Form(...)):
-        if password == settings.ADMIN_API_KEY:
+        if password.strip() == settings.ADMIN_API_KEY.strip():
             response = RedirectResponse(url="/?success=1", status_code=303)
             response.set_cookie(
                 key="session_token", 
