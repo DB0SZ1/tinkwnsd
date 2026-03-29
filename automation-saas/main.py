@@ -136,7 +136,7 @@ if settings.HTML.lower() == "true":
             
         user_topics = db.query(Topic).filter(Topic.active == True, Topic.is_automated == False).all()
         automated_topics = db.query(Topic).filter(Topic.active == True, Topic.is_automated == True).all()
-        recent_posts = db.query(Post).order_by(Post.id.desc()).limit(10).all()
+        recent_posts = db.query(Post).order_by(Post.id.desc()).all() # Show all recent history
         images = db.query(ImageLibrary).order_by(ImageLibrary.id.desc()).all()
         
         stats = {
