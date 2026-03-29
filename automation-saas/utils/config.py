@@ -74,7 +74,8 @@ class Settings:
                 missing.append(f.name)
                 values[f.name] = ""
             else:
-                values[f.name] = val
+                # Clean up whitespace/newlines which cause auth failures
+                values[f.name] = val.strip().strip('"').strip("'")
 
         if missing:
             # Log a warning but don't crash — some modules may not be used
