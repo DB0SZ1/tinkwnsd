@@ -30,4 +30,5 @@ async def verify_api_key(request: Request, x_api_key: str = Header(None, alias="
 
 async def get_current_user(request: Request):
     """Check session cookie or header for UI/API access."""
-    return await verify_api_key(request)
+    # When calling manually, we pass None for x_api_key to avoid the Header object error
+    return await verify_api_key(request, x_api_key=None)
