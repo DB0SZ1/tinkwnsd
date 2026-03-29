@@ -320,11 +320,13 @@
           
           let tag = document.getElementById('img-tag-select').value;
           let desc = document.getElementById('img-desc').value;
-
+          let cUrl = document.getElementById('img-cloudinary-url').value;
+          
           let formData = new FormData();
-          formData.append('file', fileInput.files[0]);
+          if(fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
           formData.append('tag', tag);
           formData.append('description', desc);
+          formData.append('cloudinary_url', cUrl);
 
           var originalText = this.innerHTML;
           this.innerHTML = 'Uploading...';

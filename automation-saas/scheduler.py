@@ -98,7 +98,20 @@ def generate_and_publish_x() -> None:
                 import re
                 trends = re.search(r"CURRENT X TRENDS.*?: (.*?)\b", context)
                 if trends:
-                    topic_text = trends.group(1).split(',')[0]
+                    topics_list = trends.group(1).split(',')
+                    topic_text = topics_list[0].strip()
+                    # Persist as automated topic if not exists
+                    existing = db.query(Topic).filter(Topic.topic == topic_text).first()
+                    if not existing:
+                        new_t = Topic(
+                            topic=topic_text, 
+                            platform="x", 
+                            is_automated=True,
+                            flavor="hottake", 
+                            personality="trend-analyst"
+                        )
+                        db.add(new_t)
+                        db.commit()
             logger.info(f"Automatic mode: Scouting X trends. Topic: {topic_text}")
         else:
             topics = db.query(Topic).filter(Topic.active.is_(True), Topic.platform.in_(["x", "both"])).all()
@@ -142,6 +155,23 @@ def generate_and_publish_linkedin() -> None:
         
         if settings.TOPICS_ENGINE == "automatic":
             context = _run_async(get_trending_context())
+            # Save a representative topic from news if possible
+            if "TECH NEWS" in context:
+                import re
+                news = re.search(r"TOP TECH NEWS.*?: (.*?)\b", context)
+                if news:
+                    topic_text = news.group(1).split('|')[0].strip()
+                    existing = db.query(Topic).filter(Topic.topic == topic_text).first()
+                    if not existing:
+                        new_t = Topic(
+                            topic=topic_text, 
+                            platform="linkedin", 
+                            is_automated=True,
+                            flavor="tips", 
+                            personality="github-discoverer"
+                        )
+                        db.add(new_t)
+                        db.commit()
             logger.info("Automatic mode: Scouting news for LinkedIn.")
         else:
             topics = db.query(Topic).filter(Topic.active.is_(True), Topic.platform.in_(["linkedin", "both"])).all()

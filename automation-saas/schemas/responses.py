@@ -8,6 +8,7 @@ class TopicResponse(BaseModel):
     platform: str
     flavor: str
     personality: str
+    is_automated: bool
     active: bool
 
     class Config:

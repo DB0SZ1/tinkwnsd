@@ -83,6 +83,9 @@
           <div class="page-sub">Manage your AI social media marketing engine.</div>
         </div>
         <div class="header-btns">
+          <button class="btn btn-outline" id="btn-scout-trends">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> Scout Trends
+          </button>
           <button class="btn btn-outline" data-open="modal-create">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Topic
           </button>
@@ -268,7 +271,7 @@
           <div class="img-lib-grid" style="margin-top:20px">
             {% for img in images %}
             <div class="lib-img" style="height:150px">
-              <img src="/static/uploads/{{ img.filename }}" style="width:100%; height:100%; object-fit:cover; border-radius: 6px;">
+              <img src="{{ img.cloudinary_url if img.cloudinary_url else '/static/uploads/' + img.filename }}" style="width:100%; height:100%; object-fit:cover; border-radius: 6px;" onerror="this.src='/static/img/placeholder.png'">
               <div class="lib-tag-label">{{ img.tag }}</div>
             </div>
             {% endfor %}
@@ -435,6 +438,12 @@
         <div class="up-sub">Supported: JPG, PNG, GIF (Max 5MB)</div>
       </div>
       
+      <div class="form-g">
+        <label class="form-lbl">Cloudinary URL (Optional)</label>
+        <input type="text" class="form-inp" id="img-cloudinary-url" placeholder="https://res.cloudinary.com/...">
+        <div style="font-size:10px; color:var(--ink4); margin-top:4px;">If provided, this remote URL will be prioritized.</div>
+      </div>
+
       <div class="form-g">
         <label class="form-lbl">Categorize Image (For AI Matching)</label>
         <select class="form-inp" id="img-tag-select" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239aada5%22 stroke-width=%222.5%22%3E%3Cpolyline points=%226 9 12 15 18 9%22/%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 12px center;">

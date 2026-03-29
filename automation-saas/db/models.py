@@ -85,6 +85,7 @@ class Topic(Base):
     tone = Column(String, default="professional")  # deprecated, keeping for legacy
     flavor = Column(String, default="random")     # e.g., 'storytime', 'ragebait', 'hottake', 'random'
     personality = Column(String, default="random") # e.g., 'chaotic', 'professional', 'random'
+    is_automated = Column(Boolean, default=False)
     active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
