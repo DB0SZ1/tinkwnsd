@@ -77,18 +77,48 @@ async def publish_now(
     return {"results": results}
 
 @router.post("/engine/scout")
-async def scout_trends_now(
-    db: Session = Depends(get_db),
-    _: str = Depends(verify_api_key)
-):
-    """Manually trigger the Lead Magnet scouting and trend discovery."""
-    from modules.scout import get_trending_context
+async def scout_trends_now(db: Session = Depends(get_db)):
+    """Trigger the scouting engine manually and return discovered topics."""
     try:
+        from modules.scout import get_trending_context
+        from db.models import Topic
+        import re
+        
         context = await get_trending_context()
+        new_topics = []
+        
+        # 1. Extract X Trends
+        x_match = re.search(r"CURRENT X TRENDS.*?: (.*?)\b", context)
+        if x_match:
+            trends = x_match.group(1).split(',')
+            for t_text in trends[:5]: # Take top 5
+                t_text = t_text.strip()
+                if not t_text: continue
+                existing = db.query(Topic).filter(Topic.topic == t_text).first()
+                if not existing:
+                    new_t = Topic(topic=t_text, platform="x", is_automated=True, flavor="hottake", personality="trend-analyst")
+                    db.add(new_t)
+                    new_topics.append(t_text)
+                    
+        # 2. Extract Tech News
+        news_match = re.search(r"LATEST TECH/AI NEWS: (.*?)\b", context)
+        if news_match:
+            news = news_match.group(1).split('|')
+            for n_text in news[:3]:
+                n_text = n_text.strip().split('-')[0].strip() # Take just the title
+                if not n_text: continue
+                existing = db.query(Topic).filter(Topic.topic == n_text).first()
+                if not existing:
+                    new_t = Topic(topic=n_text, platform="linkedin", is_automated=True, flavor="tips", personality="github-discoverer")
+                    db.add(new_t)
+                    new_topics.append(n_text)
+                    
+        db.commit()
         return {
             "status": "success", 
-            "message": "Scouting completed successfully.",
-            "context_preview": context[:500] if context else "No context found"
+            "message": f"Scouted {len(new_topics)} new topics.",
+            "new_topics": new_topics,
+            "context_preview": context[:500] + "..."
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}

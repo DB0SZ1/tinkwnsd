@@ -35,21 +35,33 @@ from utils.cloud_sync import backup_db_to_cloudinary, keep_alive_ping
 
 logger = get_logger(__name__)
 
-def _get_matched_image_path(db: SessionLocal, text: str, platform: str) -> str | None:
-    """Try to find the best matching image using AI descriptions, fallback to random."""
-    import os
-    try:
-        filename = _run_async(select_best_image(text, db))
-        if filename:
-            path = os.path.join("uploads", filename)
-            if os.path.exists(path):
-                logger.info(f"Using matched image for {platform}: {filename}")
-                return path
-    except Exception as e:
-        logger.error(f"Image matching failed: {e}")
+import os
+from utils.image_utils import select_best_image, download_remote_image
+from sqlalchemy.orm import Session
 
-    # Fallback to legacy random picker
-    return _get_random_image_path(db, platform)
+def _get_matched_image_path(db: Session, text: str, platform: str) -> str | None:
+    """Select best image and ensure a local path exists."""
+    try:
+        img_obj = _run_async(select_best_image(text, db))
+        if not img_obj:
+            return None
+            
+        # 1. Prioritize Cloudinary URL if available
+        if img_obj.cloudinary_url:
+            local_tmp = _run_async(download_remote_image(img_obj.cloudinary_url))
+            if local_tmp:
+                return local_tmp
+        
+        # 2. Fallback to local filename
+        if img_obj.filename:
+            path = os.path.join("uploads", img_obj.filename)
+            if os.path.exists(path):
+                return path
+        
+        return None
+    except Exception as e:
+        logger.error(f"Image match/download failed: {e}")
+        return None
 
 def _get_random_image_path(db: SessionLocal, platform: str) -> str | None:
     """Fetch a random image matching the platform rules (Legacy Fallback)."""

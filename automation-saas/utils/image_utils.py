@@ -1,10 +1,6 @@
-"""
-Image selection utility — matching post content to the best library image.
-"""
-
-from __future__ import annotations
-import httpx
-import random
+import os
+import uuid
+from typing import Tuple
 from sqlalchemy.orm import Session
 from db.models import ImageLibrary
 from utils.config import settings
@@ -12,9 +8,30 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-async def select_best_image(content: str, db: Session) -> str | None:
+async def download_remote_image(url: str) -> str | None:
+    """Download a remote image from a URL (e.g., Cloudinary) to a local temp path for publishing."""
+    try:
+        ext = url.split('.')[-1].split('?')[0] # Basic extension extraction
+        if len(ext) > 4: ext = "png"
+        
+        filename = f"tmp_remote_{uuid.uuid4().hex[:8]}.{ext}"
+        target_path = os.path.join("uploads", filename)
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            with open(target_path, "wb") as f:
+                f.write(resp.content)
+        
+        logger.info(f"Downloaded remote image for publishing: {target_path}")
+        return target_path
+    except Exception as e:
+        logger.error(f"Failed to download remote image {url}: {e}")
+        return None
+
+async def select_best_image(content: str, db: Session) -> ImageLibrary | None:
     """
-    Select the best image matching the content based on descriptions.
+    Select the best ImageLibrary object matching the content based on descriptions.
     Uses a quick LLM call to match vibes/keywords.
     """
     try:
@@ -66,7 +83,7 @@ async def select_best_image(content: str, db: Session) -> str | None:
                 for img in image_pool:
                     if img.filename in selection:
                         logger.info(f"AI matched post to image: {img.filename}")
-                        return img.filename
+                        return img
                         
         logger.warning("AI selection did not match any known filename. Falling back.")
         return None

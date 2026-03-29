@@ -133,8 +133,9 @@
               let res = await fetch('/api/v1/engine/scout', { method: 'POST' });
               let data = await res.json();
               if(data.status === 'success') {
-                  showToast('Scouting successful! Check logs for trends.');
+                  showToast('Scouting successful! Found ' + (data.new_topics ? data.new_topics.length : 0) + ' trends.');
                   console.log("Trend Context Preview:", data.context_preview);
+                  setTimeout(() => location.reload(), 2000);
               } else {
                   showToast('Scouting failed: ' + data.message, 'error');
               }
