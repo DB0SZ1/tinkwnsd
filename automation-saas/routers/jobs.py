@@ -75,3 +75,20 @@ async def publish_now(
             results["linkedin"] = {"status": "skipped", "reason": "no active topics"}
 
     return {"results": results}
+
+@router.post("/engine/scout")
+async def scout_trends_now(
+    db: Session = Depends(get_db),
+    _: str = Depends(verify_api_key)
+):
+    """Manually trigger the Lead Magnet scouting and trend discovery."""
+    from modules.scout import get_trending_context
+    try:
+        context = await get_trending_context()
+        return {
+            "status": "success", 
+            "message": "Scouting completed successfully.",
+            "context_preview": context[:500] if context else "No context found"
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

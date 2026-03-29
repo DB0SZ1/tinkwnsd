@@ -82,6 +82,8 @@
             "X_PASSWORD": "set-x-pass",
             "LINKEDIN_ACCESS_TOKEN": "set-li-token",
             "LINKEDIN_PERSON_ID": "set-li-urn",
+            "TOPICS_ENGINE": "set-topic-engine",
+            "WOEID": "set-woeid",
             "DATABASE_URL": "set-db",
             "ADMIN_API_KEY": "set-admin-key",
             "TIMEZONE": "set-tz"
@@ -103,6 +105,48 @@
       },300); 
   }
   
+  window.deleteTopic = async function(id) {
+    if(!confirm('Are you sure you want to delete this topic?')) return;
+    try {
+        let res = await fetch(`/api/v1/topics/${id}`, { method: 'DELETE' });
+        if(res.ok) {
+            showToast('Topic deleted.');
+            var el = document.querySelector(`[data-topic-id="${id}"]`);
+            if(el) el.remove();
+        } else {
+            showToast('Delete failed.', 'error');
+        }
+    } catch(e) {
+        showToast('Network error.', 'error');
+    }
+  };
+
+  // MANUAL ENGINE SCOUT
+  var btnScout = document.getElementById('btn-scout-trends');
+  if(btnScout) {
+      btnScout.addEventListener('click', async function(){
+          var originalHtml = this.innerHTML;
+          this.innerHTML = '<span class="loading-spin">🔄</span> Scouting...';
+          this.disabled = true;
+
+          try {
+              let res = await fetch('/api/v1/engine/scout', { method: 'POST' });
+              let data = await res.json();
+              if(data.status === 'success') {
+                  showToast('Scouting successful! Check logs for trends.');
+                  console.log("Trend Context Preview:", data.context_preview);
+              } else {
+                  showToast('Scouting failed: ' + data.message, 'error');
+              }
+          } catch(e) {
+              showToast('Network error.', 'error');
+          } finally {
+              this.innerHTML = originalHtml;
+              this.disabled = false;
+          }
+      });
+  }
+
   document.querySelectorAll('[data-open]').forEach(function(el){ 
       el.addEventListener('click', function(){ openModal(el.getAttribute('data-open')); }); 
   });
@@ -275,9 +319,12 @@
           if(!fileInput.files || fileInput.files.length === 0) return;
           
           let tag = document.getElementById('img-tag-select').value;
+          let desc = document.getElementById('img-desc').value;
+
           let formData = new FormData();
           formData.append('file', fileInput.files[0]);
           formData.append('tag', tag);
+          formData.append('description', desc);
 
           var originalText = this.innerHTML;
           this.innerHTML = 'Uploading...';
@@ -331,6 +378,9 @@
                       
                       linkedin_access_token: document.getElementById('set-li-token').value,
                       linkedin_urn: document.getElementById('set-li-urn').value,
+                      
+                      topics_engine: document.getElementById('set-topic-engine').value,
+                      woeid: document.getElementById('set-woeid').value,
                       
                       database_url: document.getElementById('set-db').value,
                       admin_api_key: document.getElementById('set-admin-key').value,

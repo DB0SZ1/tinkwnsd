@@ -199,6 +199,24 @@ body{font-family:var(--font);background:var(--bg);min-height:100vh;display:flex;
 .q-badge.soon{background:rgba(232,160,32,.12);color:var(--amber)}
 .q-badge.later{background:var(--bg);color:var(--ink4);border:1px solid var(--ink5)}
 
+.btn-delete { 
+  width: 28px; 
+  height: 28px; 
+  border-radius: 8px; 
+  border: none; 
+  background: transparent; 
+  color: var(--ink4); 
+  display: grid; 
+  place-items: center; 
+  cursor: pointer; 
+  transition: all .15s; 
+  margin-left: 8px;
+}
+.btn-delete:hover { 
+  background: rgba(229,72,58,.08); 
+  color: var(--red); 
+}
+
 /* MINI STATS */
 .mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .mini-stat{background:var(--card);border-radius:var(--r-sm);padding:12px;border:1px solid rgba(0,0,0,.04);box-shadow:var(--sh)}
