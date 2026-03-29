@@ -88,30 +88,40 @@ async def scout_trends_now(db: Session = Depends(get_db)):
         new_topics = []
         
         # 1. Extract X Trends
-        x_match = re.search(r"CURRENT X TRENDS.*?: (.*?)\b", context)
-        if x_match:
-            trends = x_match.group(1).split(',')
-            for t_text in trends[:5]: # Take top 5
-                t_text = t_text.strip()
-                if not t_text: continue
-                existing = db.query(Topic).filter(Topic.topic == t_text).first()
-                if not existing:
-                    new_t = Topic(topic=t_text, platform="x", is_automated=True, flavor="hottake", personality="trend-analyst")
-                    db.add(new_t)
-                    new_topics.append(t_text)
+        x_prefix = "CURRENT X TRENDS (Nigeria/Regional):"
+        if x_prefix in context:
+            try:
+                # Find the part after the prefix but before the next double newline
+                parts = context.split(x_prefix)[1].split("\n\n")[0].strip()
+                trends = [t.strip() for t in parts.split(',')]
+                for t_text in trends[:5]:
+                    if not t_text: continue
+                    existing = db.query(Topic).filter(Topic.topic == t_text).first()
+                    if not existing:
+                        new_t = Topic(topic=t_text, platform="x", is_automated=True, flavor="hottake", personality="trend-analyst")
+                        db.add(new_t)
+                        new_topics.append(t_text)
+            except Exception as ex:
+                logger.error(f"Failed to parse X trends from context: {ex}")
                     
         # 2. Extract Tech News
-        news_match = re.search(r"LATEST TECH/AI NEWS: (.*?)\b", context)
-        if news_match:
-            news = news_match.group(1).split('|')
-            for n_text in news[:3]:
-                n_text = n_text.strip().split('-')[0].strip() # Take just the title
-                if not n_text: continue
-                existing = db.query(Topic).filter(Topic.topic == n_text).first()
-                if not existing:
-                    new_t = Topic(topic=n_text, platform="linkedin", is_automated=True, flavor="tips", personality="github-discoverer")
-                    db.add(new_t)
-                    new_topics.append(n_text)
+        news_prefix = "LATEST TECH/AI NEWS:"
+        if news_prefix in context:
+            try:
+                # Find the part after the prefix
+                parts = context.split(news_prefix)[1].split("\n\n")[0].strip()
+                news_items = [n.strip() for n in parts.split('|')]
+                for n_text in news_items[:5]:
+                    # Extract just the title part (before the hyphen)
+                    title = n_text.split(' - ')[0].strip()
+                    if not title: continue
+                    existing = db.query(Topic).filter(Topic.topic == title).first()
+                    if not existing:
+                        new_t = Topic(topic=title, platform="linkedin", is_automated=True, flavor="tips", personality="github-discoverer")
+                        db.add(new_t)
+                        new_topics.append(title)
+            except Exception as ex:
+                logger.error(f"Failed to parse Tech news from context: {ex}")
                     
         db.commit()
         return {
