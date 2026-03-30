@@ -22,9 +22,10 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 def _load_persona_context() -> str:
-    """Read all .md files in the persona/ directory to build the AI's system context."""
+    """Read the 3 core .md files in the persona/ directory to build the AI's system context."""
     persona_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "persona")
-    files = ["persona.md", "skill.md", "how_to_write.md", "memory.md"]
+    # Only the 3 core files as requested
+    files = ["persona.md", "how_to_write.md", "memory.md"]
     context = []
     
     for f_name in files:
@@ -71,7 +72,7 @@ async def generate_content(
     flavor: str = "random", 
     personality: str = "random",
     context: str | None = None
-) -> str:
+) -> tuple[str, str | None]:
     """
     Generate platform-specific content using OpenRouter AI.
     Features: Content Persona Layering, Platform Tone Calibration, Human Signals, Real-time Context.
@@ -133,14 +134,16 @@ async def generate_content(
     
     full_system_prompt = (
         f"YOU ARE NOT AN AI. YOU ARE THE INDIVIDUAL DESCRIBED IN THE ATTACHED PERSONA CONTEXT.\n"
-        f"NEVER USE AI-ISMS (e.g., 'delve', 'tapestry', 'certainly', 'please note').\n"
-        f"NEVER USE HARSH WORDS LIKE 'KILL' OR VIOLENT ANALOGIES.\n\n"
+        f"Read memory.md first. Write to it after. Do not post anything that fails the rejection test in how_to_write.md.\n\n"
         f"{persona_context}\n\n"
-        f"### SPECIFIC INSTRUCTIONS FOR {platform.upper()} ###\n"
+        f"### SPECIFIC {platform.upper()} GUIDELINES (Use to calibrate voice) ###\n"
         f"{rules}\n\n"
-        f"### SELECTED PERSONALITY TRAITS ({personality.upper()}) ###\n"
-        f"{persona_instructions.get(personality, '')}\n\n"
-        f"Return ONLY the post text, nothing else."
+        f"### RESPONSE REQUIREMENTS ###\n"
+        f"1. Generate exactly what is requested (X Tweet or LinkedIn Post).\n"
+        f"2. Never use AI-isms (e.g., 'delve', 'tapestry', 'certainly', 'please note').\n"
+        f"3. Never use harsh words like 'KILL' or violent analogies.\n"
+        f"4. Provide a log line for memory.md at the VERY END after the delimiter ###MEMORY_UPDATE###.\n"
+        f"Log line format: [Platform] | [Arc] | [Core point] | [Current Date if context allows]\n"
     )
 
     # 4. Contextual Injection
@@ -179,11 +182,21 @@ async def generate_content(
                     data = resp.json()
 
                     if "choices" in data and len(data["choices"]) > 0:
-                        content = data["choices"][0]["message"]["content"].strip()
+                        raw_content = data["choices"][0]["message"]["content"].strip()
+                        
+                        # Parse post vs memory log
+                        if "###MEMORY_UPDATE###" in raw_content:
+                            post_part, memory_part = raw_content.split("###MEMORY_UPDATE###")
+                            content = post_part.strip()
+                            memory_log = memory_part.strip().strip("|") # Clean up
+                        else:
+                            content = raw_content
+                            memory_log = None
+                            
                         # Safety clamp for X
                         if platform == "x" and len(content) > 280:
                             content = content[:277] + "..."
-                        return content
+                        return (content, memory_log)
                     else:
                         raise ValueError(f"Unexpected OpenRouter response: {data}")
 

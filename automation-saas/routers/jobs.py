@@ -9,6 +9,7 @@ from modules.content_generator import generate_content
 from modules.linkedin_publisher import publish_to_linkedin
 from modules.x_publisher import publish_to_x
 from utils.image_utils import select_best_image, download_remote_image
+from utils.memory_utils import append_memory_log
 import os
 
 router = APIRouter(tags=["Jobs"])
@@ -51,7 +52,7 @@ async def publish_now(
         if topics:
             topic = random.choice(topics)
             try:
-                text = await generate_content(topic.topic, platform="x", personality=topic.personality or "random")
+                text, memory_log = await generate_content(topic.topic, platform="x", personality=topic.personality or "random")
                 
                 # Image matching
                 img_path = None
@@ -65,6 +66,10 @@ async def publish_now(
                             img_path = local_path
                 
                 post = await publish_to_x(text, db, image_path=img_path)
+                
+                if post and memory_log:
+                    append_memory_log(memory_log)
+                    
                 results["x"] = {"status": "published", "post_id": str(post.id) if post else None}
             except Exception as exc:
                 results["x"] = {"status": "failed", "error": str(exc)}
@@ -80,7 +85,7 @@ async def publish_now(
         if topics:
             topic = random.choice(topics)
             try:
-                text = await generate_content(topic.topic, platform="linkedin", personality=topic.personality or "random")
+                text, memory_log = await generate_content(topic.topic, platform="linkedin", personality=topic.personality or "random")
                 
                 # Image matching
                 img_path = None
@@ -94,6 +99,10 @@ async def publish_now(
                             img_path = local_path
                             
                 post = await publish_to_linkedin(text, db, image_path=img_path)
+                
+                if post and memory_log:
+                    append_memory_log(memory_log)
+                    
                 results["linkedin"] = {"status": "published", "post_id": str(post.id) if post else None}
             except Exception as exc:
                 results["linkedin"] = {"status": "failed", "error": str(exc)}
