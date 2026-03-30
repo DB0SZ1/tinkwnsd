@@ -80,9 +80,11 @@ class Settings:
                 if not has_default:
                     missing.append(f.name)
                 values[f.name] = f.default if has_default else ""
-            else:
-                # Clean up whitespace/newlines which cause auth failures
-                values[f.name] = val.strip().strip('"').strip("'")
+            if val is not None and isinstance(val, str):
+                val = val.strip().strip('"').strip("'")
+                values[f.name] = val
+            elif val is not None:
+                values[f.name] = val
 
         if missing:
             # Log a warning but don't crash — some modules may not be used

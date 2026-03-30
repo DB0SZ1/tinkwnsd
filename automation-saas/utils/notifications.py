@@ -27,8 +27,13 @@ async def send_push_notification(title: str, message: str, priority: int = 3, ta
     priority: 1 (min) to 5 (max)
     tags: comma separated emojis or tag words (e.g., 'warning,skull')
     """
+    import base64
+    
+    # ntfy supports UTF-8 titles via Base64 in the X-Title header
+    encoded_title = f"=?utf-8?B?{base64.b64encode(title.encode('utf-8')).decode('ascii')}?="
+    
     headers = {
-        "Title": title.encode('utf-8').decode('latin-1'),
+        "X-Title": encoded_title,
         "Priority": str(priority),
     }
     if tags:

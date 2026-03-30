@@ -24,13 +24,44 @@ logger = get_logger(__name__)
 
 
 def _get_client() -> tweepy.Client:
-    """Build an authenticated tweepy Client."""
-    return tweepy.Client(
-        consumer_key=settings.X_API_KEY,
-        consumer_secret=settings.X_API_SECRET,
-        access_token=settings.X_ACCESS_TOKEN,
-        access_token_secret=settings.X_ACCESS_TOKEN_SECRET,
-    )
+    # 1. Detailed Diagnostic Logging (Masked)
+    def mask(s): return f"{s[:4]}...{s[-4:]}" if s and len(s) > 8 else "****"
+    
+    logger.info("--- X AUTH DIAGNOSTIC START ---")
+    logger.info(f"API Key: {mask(settings.X_API_KEY)}")
+    logger.info(f"API Secret: {mask(settings.X_API_SECRET)}")
+    logger.info(f"Access Token: {mask(settings.X_ACCESS_TOKEN)}")
+    logger.info(f"Access Token Secret: {mask(settings.X_ACCESS_TOKEN_SECRET)}")
+    
+    try:
+        # Standard App (v2 API) requires OAuth 1.0a User Context for POST /2/tweets
+        client = tweepy.Client(
+            consumer_key=settings.X_API_KEY.strip(),
+            consumer_secret=settings.X_API_SECRET.strip(),
+            access_token=settings.X_ACCESS_TOKEN.strip(),
+            access_token_secret=settings.X_ACCESS_TOKEN_SECRET.strip(),
+            wait_on_rate_limit=True
+        )
+        
+        # Verify credentials by getting me (User ID)
+        me = client.get_me()
+        if me and me.data:
+            logger.info(f"X Auth SUCCESS: Authenticated as @{me.data.username} (ID: {me.data.id})")
+        else:
+            logger.warning("X Auth PARTIAL: Connected but could not fetch user profile.")
+        
+        return client
+
+    except Exception as e:
+        logger.error(f"X Auth FAILURE: {e}")
+        if "401" in str(e):
+            logger.error("DIAGNOSTIC: Error 401 Unauthorized. This usually means your Access Token/Secret are invalid OR you regenerated them but didn't update the .env.")
+        elif "403" in str(e):
+            logger.error("DIAGNOSTIC: Error 403 Forbidden. This usually means your App does NOT have 'Read and Write' permissions enabled in the X Developer Portal.")
+        elif "400" in str(e):
+            logger.error("DIAGNOSTIC: Error 400 Bad Request. Check for hidden spaces/newlines in your .env keys.")
+        
+        raise  # Re-raise to show the "Manual Guide" below
 
 
 async def publish_to_x(text: str, db: Session, image_path: str | None = None) -> Post | None:
