@@ -100,7 +100,7 @@ async def _upload_image_to_linkedin(image_path: str, person_urn: str) -> str | N
 
 
 async def publish_to_linkedin(text: str, db: Session, image_path: str | None = None) -> Post | None:
-    """Publish a text/image post to LinkedIn and persist the record."""
+    """Publish a text/image post to LinkedIn /v2/posts and persist the record."""
     post = Post(
         platform="linkedin",
         content=text,
@@ -114,38 +114,39 @@ async def publish_to_linkedin(text: str, db: Session, image_path: str | None = N
         if image_path:
             asset_urn = await _upload_image_to_linkedin(image_path, person_urn)
 
+        # /v2/posts Payload Strategy
         payload = {
             "author": person_urn,
             "lifecycleState": "PUBLISHED",
-            "specificContent": {
-                "com.linkedin.ugc.ShareContent": {
-                    "shareCommentary": {"text": text},
-                    "shareMediaCategory": "IMAGE" if asset_urn else "NONE",
-                }
-            },
-            "visibility": {
-                "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-            },
+            "commentary": text,
+            "visibility": "PUBLIC",
+            "distribution": {
+                "feedDistribution": "MAIN_FEED",
+                "targetEntities": [],
+                "thirdPartyDistributionChannels": []
+            }
         }
         
         if asset_urn:
-            payload["specificContent"]["com.linkedin.ugc.ShareContent"]["media"] = [
-                {
-                    "status": "READY",
-                    "description": {"text": "Image attachment"},
-                    "media": asset_urn,
-                }
-            ]
+            payload["content"] = {
+                "media": [
+                    {
+                        "id": asset_urn,
+                        "altText": "Image for LinkedIn post"
+                    }
+                ]
+            }
 
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(
-                f"{LINKEDIN_API_BASE}/ugcPosts",
+                f"{LINKEDIN_API_BASE}/posts",
                 json=payload,
                 headers=_headers(),
             )
             resp.raise_for_status()
             data = resp.json()
 
+        # LinkedIn returns post URN in the 'id' field or a header
         linkedin_post_id = data.get("id", "")
         post.post_id = linkedin_post_id
         post.published_at = datetime.now(timezone.utc)
@@ -155,7 +156,7 @@ async def publish_to_linkedin(text: str, db: Session, image_path: str | None = N
         db.commit()
         db.refresh(post)
 
-        logger.info("Published LinkedIn post %s (id=%s)", post.id, linkedin_post_id)
+        logger.info("Published modern LinkedIn post %s (id=%s)", post.id, linkedin_post_id)
         return post
 
     except httpx.HTTPStatusError as exc:
@@ -181,3 +182,16 @@ async def publish_to_linkedin(text: str, db: Session, image_path: str | None = N
         db.add(post)
         db.commit()
         return None
+
+async def check_li_auth() -> dict:
+    """Verifies LinkedIn connectivity and token health."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(f"{LINKEDIN_API_BASE}/me", headers=_headers())
+            if resp.status_code == 200:
+                data = resp.json()
+                return {"status": "healthy", "user": data.get("localizedFirstName", "User")}
+            else:
+                return {"status": "unauthorized", "error": resp.text[:100]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}

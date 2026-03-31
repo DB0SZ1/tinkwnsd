@@ -202,4 +202,9 @@ async def generate_content(
 
     except Exception as exc:
         logger.error("Content generation failed: %s", exc)
-        return f"Just thinking about {topic}... 🚀 #TechTalk"
+        # Return a safe tuple — never the generic slop
+        if platform == "x":
+            fallback = f"Been deep in {topic}. More on this soon."
+        else:
+            fallback = f"Working on something around {topic}. Will share details once it's ready."
+        return (fallback, None)

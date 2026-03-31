@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy import desc, text
 from sqlalchemy.orm import Session
 
 from db.models import Base, Lead, Post, Topic, ImageLibrary
@@ -21,6 +22,8 @@ from routers.api import api_router
 from scheduler import create_scheduler
 from utils.config import settings
 from utils.logger import get_logger
+from modules.x_publisher import _get_client, check_x_auth, publish_to_x
+from modules.linkedin_publisher import check_li_auth, publish_to_linkedin
 
 logger = get_logger(__name__)
 
@@ -155,3 +158,116 @@ if settings.HTML.lower() == "true":
             "images": images,
             "stats": stats
         })
+# API: AI PERSONA MANAGEMENT
+@app.get("/api/v1/persona")
+async def get_persona_files():
+    persona_dir = os.path.join(os.path.dirname(__file__), "persona")
+    files = ["persona.md", "how_to_write.md", "memory.md"]
+    data = {}
+    for f_name in files:
+        f_path = os.path.join(persona_dir, f_name)
+        if os.path.exists(f_path):
+            with open(f_path, "r", encoding="utf-8") as f:
+                data[f_name] = f.read()
+        else:
+            data[f_name] = f"# {f_name.upper()}\n(File not found)"
+    return data
+
+@app.post("/api/v1/persona")
+async def update_persona_files(data: dict):
+    persona_dir = os.path.join(os.path.dirname(__file__), "persona")
+    for f_name, content in data.items():
+        if f_name in ["persona.md", "how_to_write.md", "memory.md"]:
+            f_path = os.path.join(persona_dir, f_name)
+            with open(f_path, "w", encoding="utf-8") as f:
+                f.write(content)
+    return {"status": "success"}
+
+# API: X DIAGNOSTICS
+@app.get("/api/v1/debug/x-auth")
+async def debug_x_auth():
+    try:
+        # This will trigger the logger.info diagnostic block in _get_client
+        client = _get_client()
+        return {"status": "success", "message": "X Authentication Successful!"}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+# API: SYSTEM HEALTH & LOGS
+@app.get("/api/v1/system/health")
+async def get_system_health():
+    # Check Database
+    db_status = "healthy"
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    # Check X
+    x_health = check_x_auth()
+    
+    # Check LinkedIn
+    li_health = await check_li_auth()
+    
+    # Check OpenRouter (Basic check)
+    or_health = "healthy" if settings.OPENROUTER_API_KEY else "missing_key"
+    
+    return {
+        "database": db_status,
+        "x": x_health,
+        "linkedin": li_health,
+        "openrouter": or_health,
+        "timestamp": os.popen("date /t").read().strip() + " " + os.popen("time /t").read().strip()
+    }
+
+@app.get("/api/v1/system/logs")
+async def get_system_logs():
+    log_path = os.path.join(os.path.dirname(__file__), "logs", "app.log")
+    if not os.path.exists(log_path):
+        return {"logs": "Log file not found yet. Generate some activity!"}
+    
+    try:
+        # Use PowerShell tail equivalent or just read last N lines
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            return {"logs": "".join(lines[-100:])} # Last 100 lines
+    except Exception as e:
+        return {"logs": f"Error reading logs: {e}"}
+
+@app.post("/api/v1/system/manual-post/{platform}")
+async def trigger_manual_post(platform: str):
+    from db.session import SessionLocal
+    db = SessionLocal()
+    try:
+        # Find oldest active topic for this platform
+        topic = db.query(Topic).filter(
+            Topic.active == True,
+            (Topic.platform == platform) | (Topic.platform == "both")
+        ).order_by(Topic.id).first()
+        
+        if not topic:
+            return {"status": "failed", "message": f"No active topics found for {platform}"}
+        
+        # Generate and Publish
+        from modules.content_generator import generate_content
+        content, memory_log = await generate_content(topic.topic, platform, topic.flavor, topic.personality)
+        
+        if platform == "x":
+            result = await publish_to_x(content, db)
+        else:
+            result = await publish_to_linkedin(content, db)
+            
+        if result:
+            # Update memory
+            from utils.memory_utils import update_memory_log
+            update_memory_log(memory_log)
+            return {"status": "success", "message": f"Successfully pushed manual post to {platform}"}
+        else:
+            return {"status": "failed", "message": f"Publisher failed for {platform}. Check logs."}
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        db.close()

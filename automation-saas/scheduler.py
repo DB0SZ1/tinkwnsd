@@ -2,10 +2,10 @@
 APScheduler setup — registers all recurring jobs.
 
 Jobs:
-  1. generate_and_publish_x       — daily 08:00 UTC (09:00 WAT)
-  2. generate_and_publish_linkedin — daily 09:00 UTC (10:00 WAT)
-  3. track_engagement              — daily 15:00 UTC (16:00 WAT)
-  4. log_leads                     — daily 16:00 UTC (17:00 WAT)
+  1. generate_and_publish_x       — 2x daily (09:00, 18:00 UTC) staggered
+  2. generate_and_publish_linkedin — 5x daily (08:00, 11:00, 14:00, 17:00, 20:00 UTC)
+  3. track_engagement              — daily 15:00 UTC
+  4. log_leads                     — daily 16:00 UTC
 
 All jobs are wrapped in try/except so failures never crash the scheduler.
 """
@@ -269,8 +269,18 @@ def create_scheduler() -> BackgroundScheduler:
     """Create and configure the BackgroundScheduler with all jobs."""
     scheduler = BackgroundScheduler(timezone="UTC")
 
-    # X publishing — 2 times daily (08:00 and 16:00 WAT -> 07:00 and 15:00 UTC)
-    for hour in [7, 15]:
+    # Parse configurable hours from settings (comma-separated UTC hours)
+    def parse_hours(csv_str: str, fallback: list[int]) -> list[int]:
+        try:
+            return [int(h.strip()) for h in csv_str.split(",") if h.strip().isdigit()]
+        except Exception:
+            return fallback
+
+    x_hours = parse_hours(settings.X_SCHEDULE_HOURS, [7, 18])
+    li_hours = parse_hours(settings.LI_SCHEDULE_HOURS, [6, 9, 11, 14, 16])
+
+    # X publishing — 2 times daily at configured peak hours
+    for hour in x_hours:
         scheduler.add_job(
             generate_and_publish_x,
             trigger=CronTrigger(hour=hour, minute=0, jitter=600),
@@ -279,8 +289,8 @@ def create_scheduler() -> BackgroundScheduler:
             replace_existing=True,
         )
 
-    # LinkedIn publishing — 5 times daily (07:00, 10:00, 13:00, 16:00, 19:00 UTC)
-    for hour in [7, 10, 13, 16, 19]:
+    # LinkedIn publishing — 5 times daily at configured peak hours
+    for hour in li_hours:
         scheduler.add_job(
             generate_and_publish_linkedin,
             trigger=CronTrigger(hour=hour, minute=0, jitter=600),
@@ -296,5 +306,6 @@ def create_scheduler() -> BackgroundScheduler:
     scheduler.add_job(send_whatsapp_analytics, trigger=CronTrigger(hour=17, minute=30), id="wa_analytics")
     scheduler.add_job(keep_alive_ping, trigger="interval", minutes=10, id="keep_alive_ping")
 
-    logger.info("Scheduler configured with 12 active job slots")
+    total_jobs = len(x_hours) + len(li_hours) + 5  # 5 = support jobs
+    logger.info(f"Scheduler configured with {total_jobs} active job slots (X: {x_hours} UTC, LinkedIn: {li_hours} UTC)")
     return scheduler

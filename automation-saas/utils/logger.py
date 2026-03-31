@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import logging
 import sys
+import os
+from logging.handlers import RotatingFileHandler
 from datetime import datetime, timezone
 
 
@@ -34,9 +36,22 @@ def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
 
     if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(StructuredFormatter())
-        logger.addHandler(handler)
+        # Create logs directory if missing
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "app.log")
+
+        # 1. Console Handler (Structured)
+        c_handler = logging.StreamHandler(sys.stdout)
+        c_handler.setFormatter(StructuredFormatter())
+        logger.addHandler(c_handler)
+
+        # 2. File Handler (Rotating, Plain Text for UI ease)
+        f_handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=3)
+        f_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        f_handler.setFormatter(f_formatter)
+        logger.addHandler(f_handler)
+
         logger.setLevel(logging.INFO)
         logger.propagate = False
 

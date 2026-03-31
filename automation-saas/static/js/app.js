@@ -41,7 +41,16 @@
       var target = el.getAttribute('data-nav');
       document.querySelectorAll('.tab-content').forEach(function(tc){ tc.style.display = 'none'; });
       var targetEl = document.getElementById('tab-' + target);
-      if(targetEl) targetEl.style.display = 'block';
+      if(targetEl) {
+        targetEl.style.display = 'block';
+        if(target === 'persona') fetchPersona();
+        if(target === 'health') {
+            fetchHealth();
+            startLogPolling();
+        } else {
+            stopLogPolling();
+        }
+      }
 
       if(window.innerWidth <= 768){
         sidebar.classList.remove('open');
@@ -86,7 +95,9 @@
             "WOEID": "set-woeid",
             "DATABASE_URL": "set-db",
             "ADMIN_API_KEY": "set-admin-key",
-            "TIMEZONE": "set-tz"
+            "TIMEZONE": "set-tz",
+            "X_SCHEDULE_HOURS": "set-x-schedule",
+            "LI_SCHEDULE_HOURS": "set-li-schedule"
         };
         
         for(let key in map) {
@@ -419,7 +430,9 @@
                       
                       database_url: document.getElementById('set-db').value,
                       admin_api_key: document.getElementById('set-admin-key').value,
-                      timezone: document.getElementById('set-tz').value
+                      timezone: document.getElementById('set-tz').value,
+                      x_schedule_hours: document.getElementById('set-x-schedule').value,
+                      li_schedule_hours: document.getElementById('set-li-schedule').value
                   })
               });
               if(res.ok) {
@@ -435,6 +448,177 @@
               setTimeout(() => this.innerHTML = originalText, 2000);
           }
       });
+  }
+
+  // System Health Logic
+  let logInterval = null;
+
+  async function fetchHealth() {
+    console.log("Fetching system health...");
+    try {
+        let res = await fetch('/api/v1/system/health');
+        let d = await res.json();
+        console.log("Health data received:", d);
+        
+        document.getElementById('health-timestamp').innerText = `Last Checked: ${d.timestamp}`;
+
+        updateHealthItem('health-db', d.database === "healthy" ? "healthy" : "ERROR");
+        updateHealthItem('health-or', d.openrouter);
+        updateHealthItem('health-x', d.x.status);
+        updateHealthItem('health-li', d.linkedin.status);
+    } catch(e) {
+        console.error("Health fetch failed:", e);
+    }
+  }
+
+  function updateHealthItem(id, status) {
+    let el = document.getElementById(id);
+    if(!el) return;
+    let dot = el.querySelector('.h-dot');
+    let pill = el.querySelector('.h-pill');
+    
+    // Status normalization
+    let s = status.toLowerCase();
+    let isHealthy = s === 'healthy';
+    let isAuthError = s.includes('unauthorized') || s.includes('denied') || s.includes('401');
+
+    if(isHealthy) {
+        dot.className = 'h-dot on';
+        pill.className = 'h-pill healthy';
+        pill.innerText = 'Connected';
+    } else if(isAuthError) {
+        dot.className = 'h-dot off';
+        pill.className = 'h-pill unauthorized';
+        pill.innerText = 'Unauthorized';
+    } else {
+        dot.className = 'h-dot off';
+        pill.className = 'h-pill error';
+        pill.innerText = status.toUpperCase().substring(0, 15);
+    }
+  }
+
+  async function fetchLogs() {
+    console.log("Fetching system logs...");
+    try {
+        let res = await fetch('/api/v1/system/logs');
+        let d = await res.json();
+        let consoleDiv = document.getElementById('log-console');
+        if(consoleDiv) {
+            consoleDiv.innerText = d.logs || "No logs yet.";
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+    } catch(e) {
+        console.error("Log fetch failed:", e);
+    }
+  }
+
+  function startLogPolling() {
+    fetchLogs();
+    if(!logInterval) logInterval = setInterval(fetchLogs, 5000);
+  }
+
+  function stopLogPolling() {
+    if(logInterval) {
+        clearInterval(logInterval);
+        logInterval = null;
+    }
+  }
+
+  // Manual Triggers
+  async function forcePost(platform, btn) {
+    var originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="loading-spin">🔄</span> Processing...';
+    btn.disabled = true;
+
+    try {
+        let res = await fetch(`/api/v1/system/manual-post/${platform}`, { method: 'POST' });
+        let d = await res.json();
+        if(d.status === 'success') {
+            showToast(d.message);
+        } else {
+            showToast(d.message, 'error');
+        }
+    } catch(e) {
+        showToast('Network error.', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        fetchLogs();
+    }
+  }
+
+  var btnForceX = document.getElementById('btn-force-x');
+  if(btnForceX) btnForceX.addEventListener('click', () => forcePost('x', btnForceX));
+  
+  var btnForceLi = document.getElementById('btn-force-li');
+  if(btnForceLi) btnForceLi.addEventListener('click', () => forcePost('linkedin', btnForceLi));
+
+  var btnRefreshLogs = document.getElementById('btn-refresh-logs');
+  if(btnRefreshLogs) btnRefreshLogs.addEventListener('click', fetchLogs);
+
+  // Persona Logic
+  async function fetchPersona() {
+    try {
+        let res = await fetch('/api/v1/persona');
+        let d = await res.json();
+        document.getElementById('persona-content').value = d['persona.md'] || "";
+        document.getElementById('how-to-write-content').value = d['how_to_write.md'] || "";
+        document.getElementById('memory-content').value = d['memory.md'] || "";
+    } catch(e) {
+        showToast('Failed to load persona files.', 'error');
+    }
+  }
+
+  var btnSavePersona = document.getElementById('btn-save-persona');
+  if(btnSavePersona) {
+    btnSavePersona.addEventListener('click', async function(){
+        var originalText = this.innerHTML;
+        this.innerHTML = 'Saving...';
+        try {
+            let res = await fetch('/api/v1/persona', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    'persona.md': document.getElementById('persona-content').value,
+                    'how_to_write.md': document.getElementById('how-to-write-content').value,
+                    'memory.md': document.getElementById('memory-content').value
+                })
+            });
+            if(res.ok) {
+                showToast('AI Persona Core updated!');
+            } else {
+                showToast('Failed to save persona.', 'error');
+            }
+        } catch(e) {
+            showToast('Network error.', 'error');
+        } finally {
+            setTimeout(() => this.innerHTML = originalText, 1000);
+        }
+    });
+  }
+
+  // X Health Check
+  var btnXDebug = document.getElementById('btn-x-debug');
+  if(btnXDebug) {
+    btnXDebug.addEventListener('click', async function(){
+        var originalText = this.innerHTML;
+        this.innerHTML = 'Checking...';
+        try {
+            let res = await fetch('/api/v1/debug/x-auth');
+            let d = await res.json();
+            if(d.status === 'success') {
+                showToast('X Authentication Healthy!', 'success');
+            } else {
+                // Show the specific error if it failed
+                alert("X Diagnostic Failure:\n\n" + d.error + "\n\nCheck terminal for full trace.");
+                showToast('X Auth Failed.', 'error');
+            }
+        } catch(e) {
+            showToast('Network error.', 'error');
+        } finally {
+            this.innerHTML = originalText;
+        }
+    });
   }
 
 })();

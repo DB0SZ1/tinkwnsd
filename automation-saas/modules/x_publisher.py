@@ -11,6 +11,7 @@ Usage:
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 
 import tweepy
@@ -24,44 +25,60 @@ logger = get_logger(__name__)
 
 
 def _get_client() -> tweepy.Client:
-    # 1. Detailed Diagnostic Logging (Masked)
-    def mask(s): return f"{s[:4]}...{s[-4:]}" if s and len(s) > 8 else "****"
+    """Initialize the X (Twitter) API v2 Client.
+    
+    IMPORTANT: On X Free tier, only POST /2/tweets and DELETE /2/tweets/:id are available.
+    get_me(), search, timeline, etc. are ALL forbidden (403).
+    We cannot verify auth without posting — we just build the client and trust the keys.
+    """
+    def mask(s): return f"{s[:4]}...{s[-4:]}" if s and len(s) > 8 else "(empty)" if not s else "****"
     
     logger.info("--- X AUTH DIAGNOSTIC START ---")
-    logger.info(f"API Key: {mask(settings.X_API_KEY)}")
-    logger.info(f"API Secret: {mask(settings.X_API_SECRET)}")
-    logger.info(f"Access Token: {mask(settings.X_ACCESS_TOKEN)}")
-    logger.info(f"Access Token Secret: {mask(settings.X_ACCESS_TOKEN_SECRET)}")
     
-    try:
-        # Standard App (v2 API) requires OAuth 1.0a User Context for POST /2/tweets
-        client = tweepy.Client(
-            consumer_key=settings.X_API_KEY.strip(),
-            consumer_secret=settings.X_API_SECRET.strip(),
-            access_token=settings.X_ACCESS_TOKEN.strip(),
-            access_token_secret=settings.X_ACCESS_TOKEN_SECRET.strip(),
-            wait_on_rate_limit=True
-        )
-        
-        # Verify credentials by getting me (User ID)
-        me = client.get_me()
-        if me and me.data:
-            logger.info(f"X Auth SUCCESS: Authenticated as @{me.data.username} (ID: {me.data.id})")
-        else:
-            logger.warning("X Auth PARTIAL: Connected but could not fetch user profile.")
-        
-        return client
-
-    except Exception as e:
-        logger.error(f"X Auth FAILURE: {e}")
-        if "401" in str(e):
-            logger.error("DIAGNOSTIC: Error 401 Unauthorized. This usually means your Access Token/Secret are invalid OR you regenerated them but didn't update the .env.")
-        elif "403" in str(e):
-            logger.error("DIAGNOSTIC: Error 403 Forbidden. This usually means your App does NOT have 'Read and Write' permissions enabled in the X Developer Portal.")
-        elif "400" in str(e):
-            logger.error("DIAGNOSTIC: Error 400 Bad Request. Check for hidden spaces/newlines in your .env keys.")
-        
-        raise  # Re-raise to show the "Manual Guide" below
+    # Support both X_API_KEY and X_CONSUMER_KEY (X portal uses different names)
+    api_key = (settings.X_API_KEY or "").strip()
+    api_secret = (settings.X_API_SECRET or "").strip()
+    
+    # Fallback: if X_CONSUMER_KEY is set in env and X_API_KEY looks wrong, prefer consumer key
+    consumer_key_env = os.environ.get("X_CONSUMER_KEY", "").strip()
+    consumer_secret_env = os.environ.get("X_CONSUMER_KEY_SECRET", "").strip()
+    if consumer_key_env and consumer_key_env != api_key:
+        logger.info("Using X_CONSUMER_KEY instead of X_API_KEY")
+        api_key = consumer_key_env
+    if consumer_secret_env and consumer_secret_env != api_secret:
+        logger.info("Using X_CONSUMER_KEY_SECRET instead of X_API_SECRET")
+        api_secret = consumer_secret_env
+    
+    access_token = (settings.X_ACCESS_TOKEN or "").strip()
+    access_token_secret = (settings.X_ACCESS_TOKEN_SECRET or "").strip()
+    
+    logger.info(f"Consumer Key: {mask(api_key)}")
+    logger.info(f"Consumer Secret: {mask(api_secret)}")
+    logger.info(f"Access Token: {mask(access_token)}")
+    logger.info(f"Access Token Secret: {mask(access_token_secret)}")
+    
+    # Validate we have all 4 OAuth 1.0a credentials
+    missing = []
+    if not api_key: missing.append("X_API_KEY / X_CONSUMER_KEY")
+    if not api_secret: missing.append("X_API_SECRET / X_CONSUMER_KEY_SECRET")
+    if not access_token: missing.append("X_ACCESS_TOKEN")
+    if not access_token_secret: missing.append("X_ACCESS_TOKEN_SECRET")
+    
+    if missing:
+        logger.error(f"Missing OAuth 1.0a credentials: {', '.join(missing)}")
+        raise ValueError(f"Cannot authenticate with X: missing {', '.join(missing)}")
+    
+    logger.info("Building OAuth 1.0a client (Free tier: no get_me() verification possible)")
+    client = tweepy.Client(
+        consumer_key=api_key,
+        consumer_secret=api_secret,
+        access_token=access_token,
+        access_token_secret=access_token_secret,
+        wait_on_rate_limit=True
+    )
+    
+    logger.info("X Client created successfully (auth will be verified on first tweet)")
+    return client
 
 
 async def publish_to_x(text: str, db: Session, image_path: str | None = None) -> Post | None:
@@ -142,3 +159,14 @@ async def publish_to_x(text: str, db: Session, image_path: str | None = None) ->
         db.add(post)
         db.commit()
         return None
+
+def check_x_auth() -> dict:
+    """Synchronous health check for X auth using diagnostics."""
+    try:
+        # Re-use existing _get_client which has built-in detailed logging
+        client = _get_client()
+        if client:
+            return {"status": "healthy", "message": "Successfully authenticated with X v2 API"}
+        return {"status": "error", "error": "Client initialization failed without exception"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}

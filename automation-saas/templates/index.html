@@ -43,6 +43,14 @@
       <svg class="nav-icon-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       Post History <span class="nav-badge" style="background:var(--g2)">{{ recent_posts|length }}</span>
     </a>
+    <a href="#" class="nav-item" data-nav="persona">
+      <svg class="nav-icon-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5z"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+      AI Persona
+    </a>
+    <a href="#" class="nav-item" data-nav="health">
+      <svg class="nav-icon-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      System Health
+    </a>
     
     <div class="sidebar-spacer"></div>
 
@@ -268,38 +276,6 @@
         </div>
       </div>
 
-      <!-- TRENDS TAB -->
-      <div id="tab-trends" class="tab-content" style="display:none">
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title">Auto-Scouted Trends</div>
-            <div class="q-flavor" style="font-size:10px; padding:2px 8px; border-radius:10px; background:var(--g7); color:var(--g2)">Engine: Automatic</div>
-          </div>
-          <div style="margin-top:20px">
-            {% for t in automated_topics %}
-            <div class="queue-item" data-topic-id="{{ t.id }}">
-              <div class="q-info">
-                <div class="q-text" style="font-weight:600">
-                  {{ t.topic }}
-                  <span class="q-flavor" style="margin-left:5px; font-size:9px">🤖 TREND</span>
-                </div>
-                <div class="q-meta">{{ t.platform }} • {{ t.flavor }} • {{ t.personality }}</div>
-              </div>
-              <div class="q-badge soon" style="background:rgba(133,224,163,.15); color:var(--g2)">Scouted</div>
-              <button class="btn-delete" onclick="deleteTopic({{ t.id }})" title="Delete Trend">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-              </button>
-            </div>
-            {% else %}
-            <div style="padding:60px 40px; text-align:center; color:var(--ink4)">
-              <div style="font-size:42px; margin-bottom:15px">📡</div>
-              <div style="font-weight:700; color:var(--ink2); margin-bottom:5px">No trends scouted yet.</div>
-              <div style="font-size:12px">Click the "Scout Trends" button in the header to feed the engine.</div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
 
       <!-- TRENDS TAB -->
       <div id="tab-trends" class="tab-content" style="display:none">
@@ -362,6 +338,109 @@
               <div style="font-size:12px">Once the engine starts shipping, activity will appear here.</div>
             </div>
             {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- AI PERSONA TAB -->
+      <div id="tab-persona" class="tab-content" style="display:none">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">AI Persona & Memory Core</div>
+            <button class="btn btn-primary" id="btn-save-persona">Save Changes</button>
+          </div>
+          <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="form-g">
+              <label class="form-lbl">AI Voice & Persona (persona.md)</label>
+              <textarea id="persona-content" class="topic-input" rows="22" style="font-family:'DM Mono', monospace; font-size:12px;"></textarea>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:20px;">
+              <div class="form-g">
+                <label class="form-lbl">Writing Rules & Constraints (how_to_write.md)</label>
+                <textarea id="how-to-write-content" class="topic-input" rows="8" style="font-family:'DM Mono', monospace; font-size:12px;"></textarea>
+              </div>
+              <div class="form-g">
+                <label class="form-lbl">Active Memory Log (memory.md)</label>
+                <textarea id="memory-content" class="topic-input" rows="10" style="font-family:'DM Mono', monospace; font-size:12px;"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- SYSTEM HEALTH TAB -->
+      <div id="tab-health" class="tab-content" style="display:none">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Advanced System Health & Control</div>
+            <div id="health-timestamp" style="font-size:10px; color:var(--ink4)">Last Checked: Just now</div>
+          </div>
+          
+          <!-- HEALTH STATUS GRID -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:20px;">
+            <div class="health-card" id="health-db">
+              <div class="h-dot off"></div>
+              <div class="h-info">
+                <div class="h-name">SQLite Database</div>
+                <div class="h-status"><span class="h-pill checking">Checking...</span></div>
+              </div>
+            </div>
+            <div class="health-card" id="health-or">
+              <div class="h-dot off"></div>
+              <div class="h-info">
+                <div class="h-name">OpenRouter AI</div>
+                <div class="h-status"><span class="h-pill checking">Checking...</span></div>
+              </div>
+            </div>
+            <div class="health-card" id="health-x">
+              <div class="h-dot off"></div>
+              <div class="h-info">
+                <div class="h-name">X (Twitter) API</div>
+                <div class="h-status"><span class="h-pill checking">Checking...</span></div>
+              </div>
+            </div>
+            <div class="health-card" id="health-li">
+              <div class="h-dot off"></div>
+              <div class="h-info">
+                <div class="h-name">LinkedIn API</div>
+                <div class="h-status"><span class="h-pill checking">Checking...</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MANUAL TRIGGERS -->
+          <div style="margin-top:30px;">
+            <h3 style="font-size:14px; margin-bottom:15px; color:var(--ink2)">Manual Power Controls</h3>
+            <div style="display:flex; gap:15px;">
+              <button class="btn btn-outline" id="btn-force-x" style="flex:1; justify-content:center;">⚡ Force X Post Now</button>
+              <button class="btn btn-outline" id="btn-force-li" style="flex:1; justify-content:center;">⚡ Force LinkedIn Post Now</button>
+            </div>
+          </div>
+
+          <!-- LOG CONSOLE -->
+          <div style="margin-top:30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3 style="font-size:14px; color:var(--ink2); margin:0;">Live Server Output (logs/app.log)</h3>
+              <button class="btn btn-sm btn-outline" id="btn-refresh-logs">Refresh Logs</button>
+            </div>
+            <div id="log-console" style="background:#0a0d0c; color:#85e0a3; padding:20px; border-radius:12px; font-family:'DM Mono', monospace; font-size:11px; height:300px; overflow-y:auto; line-height:1.6; border:1px solid #1a1f1d;">
+              Initializing log stream...
+            </div>
+            <style>
+              .health-card { background: var(--g8); padding: 15px; border-radius: 12px; border: 1px solid var(--g7); display: flex; align-items: center; gap: 12px; }
+              .h-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+              .h-dot.on { background: #85e0a3; box-shadow: 0 0 8px #85e0a3; }
+              .h-dot.off { background: #ff4444; }
+              .h-info { flex: 1; }
+              .h-name { font-size: 13px; font-weight: 600; color: var(--ink1); }
+              .h-status { font-size: 11px; margin-top: 2px; display: flex; gap: 5px; align-items: center; }
+              
+              /* Status Pills */
+              .h-pill { padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; }
+              .h-pill.healthy { background: rgba(133,224,163,0.15); color: #85e0a3; border: 1px solid rgba(133,224,163,0.3); }
+              .h-pill.unauthorized { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.3); }
+              .h-pill.error { background: rgba(255,68,68,0.15); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+              .h-pill.checking { background: var(--g7); color: var(--ink4); }
+            </style>
           </div>
         </div>
       </div>
@@ -449,6 +528,9 @@
         <label class="form-lbl">X Access Token Secret</label>
         <input type="password" class="form-inp" id="set-x-token-secret" placeholder="Leave blank to keep existing">
       </div>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+        <button class="btn btn-outline" id="btn-x-debug" style="font-size:10px; padding:6px 12px; background:rgba(0,0,0,0.02)">⚡ Run X Health Check</button>
+      </div>
 
       <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── X / Twitter (twikit scraping) ──</div>
       <div class="form-g">
@@ -486,6 +568,18 @@
         <label class="form-lbl">Regional WOEID (Trend Discovery)</label>
         <input type="text" class="form-inp" id="set-woeid" placeholder="23424908 (Nigeria)">
         <div style="font-size:10px; color:var(--ink4); margin-top:4px;">Used for regional X trend scouting.</div>
+      </div>
+
+      <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── Publish Schedule (UTC hours) ──</div>
+      <div class="form-g">
+        <label class="form-lbl">X Post Hours (UTC, comma-separated)</label>
+        <input type="text" class="form-inp" id="set-x-schedule" placeholder="7,18">
+        <div style="font-size:10px; color:var(--ink4); margin-top:4px;">2 posts/day. Default: 7,18 (8AM & 7PM WAT)</div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">LinkedIn Post Hours (UTC, comma-separated)</label>
+        <input type="text" class="form-inp" id="set-li-schedule" placeholder="6,9,11,14,16">
+        <div style="font-size:10px; color:var(--ink4); margin-top:4px;">5 posts/day. Default: 6,9,11,14,16 (7AM–5PM WAT)</div>
       </div>
 
       <div style="font-weight:600; font-size:12px; margin: 20px 0 10px; color:var(--ink4);">── System ──</div>

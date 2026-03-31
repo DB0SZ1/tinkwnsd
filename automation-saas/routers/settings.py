@@ -55,6 +55,8 @@ async def update_settings(body: SettingsUpdate, _: bool = Depends(get_current_us
         "TIMEZONE": body.timezone,
         "TOPICS_ENGINE": body.topics_engine,
         "WOEID": body.woeid,
+        "X_SCHEDULE_HOURS": body.x_schedule_hours,
+        "LI_SCHEDULE_HOURS": body.li_schedule_hours,
     }
 
     for key, val in fields_map.items():

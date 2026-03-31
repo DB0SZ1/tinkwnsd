@@ -24,6 +24,8 @@ class SettingsUpdate(BaseModel):
     timezone: Optional[str] = None
     topics_engine: Optional[str] = None
     woeid: Optional[str] = None
+    x_schedule_hours: Optional[str] = None
+    li_schedule_hours: Optional[str] = None
 
 class PublishRequest(BaseModel):
     platform: str = "both"  # "x" | "linkedin" | "both"

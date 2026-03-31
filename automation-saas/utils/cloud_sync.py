@@ -104,7 +104,10 @@ def restore_db_from_cloudinary():
                         except ValueError:
                             pass
                     elif isinstance(v, str) and len(v) == 32 and model_class in [Post, PostMetric, Lead] and k in ["id", "post_id"]:
-                        r[k] = UUID(v)
+                        try:
+                            r[k] = UUID(v)
+                        except ValueError:
+                            pass
 
                 obj = db.query(model_class).filter_by(id=r["id"]).first()
                 if not obj:

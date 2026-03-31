@@ -55,6 +55,11 @@ class Settings:
     # Timezone
     TIMEZONE: str
 
+    # OAuth 2.0 (Optional)
+    X_BEARER_TOKEN: str = ""
+    X_CLIENT_ID: str = ""
+    X_CLIENT_SECRET: str = ""
+
     # Cloud & Deployment
     CLOUDINARY_URL: str = ""
     PUBLIC_APP_URL: str = ""
@@ -63,6 +68,10 @@ class Settings:
     HTML: str = "true"
     TOPICS_ENGINE: str = "manual"
     WOEID: str = "23424908" # Default to Nigeria
+
+    # Configurable Schedule (comma-separated UTC hours)
+    X_SCHEDULE_HOURS: str = "7,18"           # 2x daily: 8AM & 7PM WAT
+    LI_SCHEDULE_HOURS: str = "6,9,11,14,16"  # 5x daily: 7AM, 10AM, 12PM, 3PM, 5PM WAT
 
     @classmethod
     def from_env(cls) -> "Settings":
