@@ -144,10 +144,15 @@ async def publish_to_linkedin(text: str, db: Session, image_path: str | None = N
                 headers=_headers(),
             )
             resp.raise_for_status()
-            data = resp.json()
-
-        # LinkedIn returns post URN in the 'id' field or a header
-        linkedin_post_id = data.get("id", "")
+            
+            # LinkedIn returns post URN in the 'x-restli-id' header (201 Created with empty body)
+            linkedin_post_id = resp.headers.get("x-restli-id")
+            if not linkedin_post_id:
+                try:
+                    data = resp.json()
+                    linkedin_post_id = data.get("id", "")
+                except Exception:
+                    linkedin_post_id = ""
         post.post_id = linkedin_post_id
         post.published_at = datetime.now(timezone.utc)
         post.status = "published"

@@ -136,26 +136,32 @@ def generate_and_publish_x() -> None:
             topic_obj = random.choice(topics)
             logger.info("Selected topic for X (Manual): %s", topic_obj.topic)
 
+        topic_text = topic_obj.topic
+        topic_personality = topic_obj.personality or "random"
         text, memory_log = _run_async(generate_content(
-            topic_obj.topic, 
+            topic_text, 
             platform="x", 
-            personality=topic_obj.personality or "random",
+            personality=topic_personality,
             context=context
         ))
         
         img_path = _get_matched_image_path(db, text, "x")
         post = _run_async(publish_to_x(text, db, image_path=img_path))
         
-        if post and memory_log:
-            append_memory_log(memory_log)
+        if post:
+            if memory_log:
+                append_memory_log(memory_log)
 
+            send_push_notification_sync(
+                title="🐦 X Post Published!",
+                message=f"Topic: {topic_text[:50]}...",
+                priority=3,
+                tags="bird,robot"
+            )
+        else:
+            logger.warning("X publish failed (post object is None). Skipped success notification.")
+            
         db.close()
-        send_push_notification_sync(
-            title="🐦 X Post Published!",
-            message=f"Topic: {topic_obj.topic[:50]}...",
-            priority=3,
-            tags="bird,robot"
-        )
     except Exception as exc:
         logger.error("generate_and_publish_x failed: %s", exc, exc_info=True)
         send_push_notification_sync("❌ X Publish Failed", str(exc), priority=4, tags="warning")
@@ -201,26 +207,32 @@ def generate_and_publish_linkedin() -> None:
             topic_obj = random.choice(topics)
             logger.info("Selected topic for LinkedIn (Manual): %s", topic_obj.topic)
 
+        topic_text = topic_obj.topic
+        topic_personality = topic_obj.personality or "random"
         text, memory_log = _run_async(generate_content(
-            topic_obj.topic, 
+            topic_text, 
             platform="linkedin", 
-            personality=topic_obj.personality or "random",
+            personality=topic_personality,
             context=context
         ))
         
         img_path = _get_matched_image_path(db, text, "linkedin")
         post = _run_async(publish_to_linkedin(text, db, image_path=img_path))
         
-        if post and memory_log:
-            append_memory_log(memory_log)
+        if post:
+            if memory_log:
+                append_memory_log(memory_log)
 
+            send_push_notification_sync(
+                title="🔵 LinkedIn Post Published!",
+                message=f"Topic: {topic_text[:50]}...\nPersona: {topic_personality}",
+                priority=3,
+                tags="blue_book,robot"
+            )
+        else:
+            logger.warning("LinkedIn publish failed (post object is None). Skipped success notification.")
+            
         db.close()
-        send_push_notification_sync(
-            title="🔵 LinkedIn Post Published!",
-            message=f"Topic: {topic_obj.topic[:50]}...\nPersona: {topic_obj.personality}",
-            priority=3,
-            tags="blue_book,robot"
-        )
     except Exception as exc:
         logger.error("generate_and_publish_linkedin failed: %s", exc, exc_info=True)
         send_push_notification_sync("❌ LinkedIn Publish Failed", str(exc), priority=4, tags="warning")

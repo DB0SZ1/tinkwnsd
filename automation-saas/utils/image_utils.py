@@ -45,7 +45,7 @@ async def select_best_image(content: str, db: Session) -> ImageLibrary | None:
         image_pool = [img for img in images if img.description]
         if not image_pool:
             # Fallback: Pick a random image from the entire library if no descriptions exist
-            return random.choice(images).filename
+            return random.choice(images)
 
         # Construct a list of descriptions for the AI
         options = "\n".join([f"- {i.filename}: {i.description}" for i in image_pool])
